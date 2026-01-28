@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/libforge-core",
+    "crates/libforge-build",
+    "crates/libforge-pack",
+    "crates/libforge-publish",
+    "crates/libforge-cli",
+]
