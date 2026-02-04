@@ -197,7 +197,8 @@
       "required": ["default", "targets"],
       "properties": {
         "default": {
-          "type": "string"
+          "type": "string",
+          "description": "Canonical platform key (for example, linux-x86_64)."
         },
         "targets": {
           "type": "array",
@@ -213,7 +214,8 @@
       "required": ["name"],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Canonical platform key (for example, linux-x86_64)."
         },
         "triples": {
           "type": "array",

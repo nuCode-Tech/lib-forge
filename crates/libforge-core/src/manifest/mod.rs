@@ -6,4 +6,5 @@ pub use schema::{
     ArtifactNaming, Artifacts, BindingDescriptor, Bindings, Build, BuildIdentity, Manifest,
     Package, Platform, Platforms,
 };
+pub use serialize::{deserialize_manifest, serialize_manifest, serialize_manifest_pretty};
 pub use validate::{validate, ManifestError};

@@ -1,9 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
 use super::Manifest;
+use crate::platform::PlatformKey;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ManifestError {
+    MissingChecksumAlgorithm {
+        algorithm: String,
+    },
+    InvalidPlatformKey {
+        platform: String,
+    },
     InvalidDefaultPlatform {
         platform: String,
     },
@@ -37,6 +44,16 @@ pub enum ManifestError {
 impl std::fmt::Display for ManifestError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            ManifestError::MissingChecksumAlgorithm { algorithm } => {
+                write!(
+                    f,
+                    "manifest must declare checksum algorithm '{}'",
+                    algorithm
+                )
+            }
+            ManifestError::InvalidPlatformKey { platform } => {
+                write!(f, "platform '{}' is not a valid platform key", platform)
+            }
             ManifestError::InvalidDefaultPlatform { platform } => write!(
                 f,
                 "platforms.default '{}' must match a platforms.targets[].name value",
@@ -84,6 +101,31 @@ impl std::fmt::Display for ManifestError {
 impl std::error::Error for ManifestError {}
 
 pub fn validate(manifest: &Manifest) -> Result<(), ManifestError> {
+    if !manifest
+        .artifacts
+        .checksums
+        .iter()
+        .any(|value| value == "sha256")
+    {
+        return Err(ManifestError::MissingChecksumAlgorithm {
+            algorithm: "sha256".to_string(),
+        });
+    }
+
+    for platform in &manifest.platforms.targets {
+        if platform.name.parse::<PlatformKey>().is_err() {
+            return Err(ManifestError::InvalidPlatformKey {
+                platform: platform.name.clone(),
+            });
+        }
+    }
+
+    if manifest.platforms.default.parse::<PlatformKey>().is_err() {
+        return Err(ManifestError::InvalidPlatformKey {
+            platform: manifest.platforms.default.clone(),
+        });
+    }
+
     let platform_names: HashSet<&str> = manifest
         .platforms
         .targets
@@ -217,21 +259,21 @@ mod tests {
                     include_platform: true,
                     include_binding: true,
                 },
-                checksums: vec![],
+                checksums: vec!["sha256".to_string()],
             },
             bindings: Bindings {
                 primary: None,
                 catalog: vec![BindingDescriptor {
                     name: "dart".to_string(),
                     version: "3.0.0".to_string(),
-                    platforms: vec!["desktop".to_string()],
+                    platforms: vec!["linux-x86_64".to_string()],
                     artifacts: vec!["bundle".to_string()],
                 }],
             },
             platforms: Platforms {
-                default: "desktop".to_string(),
+                default: "linux-x86_64".to_string(),
                 targets: vec![Platform {
-                    name: "desktop".to_string(),
+                    name: "linux-x86_64".to_string(),
                     triples: vec!["x86_64-unknown-linux-gnu".to_string()],
                     bindings: vec!["dart".to_string()],
                     artifacts: vec!["bundle".to_string()],
@@ -244,12 +286,36 @@ mod tests {
     #[test]
     fn invalid_default_platform_fails() {
         let mut manifest = sample_manifest();
-        manifest.platforms.default = "ios".to_string();
+        manifest.platforms.default = "ios-arm64".to_string();
 
         let result = validate(&manifest);
         assert!(matches!(
             result,
             Err(ManifestError::InvalidDefaultPlatform { .. })
+        ));
+    }
+
+    #[test]
+    fn invalid_platform_key_fails() {
+        let mut manifest = sample_manifest();
+        manifest.platforms.targets[0].name = "linux".to_string();
+
+        let result = validate(&manifest);
+        assert!(matches!(
+            result,
+            Err(ManifestError::InvalidPlatformKey { .. })
+        ));
+    }
+
+    #[test]
+    fn missing_checksum_algorithm_fails() {
+        let mut manifest = sample_manifest();
+        manifest.artifacts.checksums = vec![];
+
+        let result = validate(&manifest);
+        assert!(matches!(
+            result,
+            Err(ManifestError::MissingChecksumAlgorithm { .. })
         ));
     }
 
@@ -269,7 +335,7 @@ mod tests {
     fn duplicate_artifact_identifier_fails() {
         let mut manifest = sample_manifest();
         manifest.platforms.targets.push(Platform {
-            name: "android".to_string(),
+            name: "android-arm64".to_string(),
             triples: vec!["aarch64-linux-android".to_string()],
             bindings: vec!["dart".to_string()],
             artifacts: vec!["bundle".to_string()],
@@ -299,13 +365,13 @@ mod tests {
     fn artifact_platform_mismatch_fails() {
         let mut manifest = sample_manifest();
         manifest.platforms.targets.push(Platform {
-            name: "android".to_string(),
+            name: "android-arm64".to_string(),
             triples: vec!["aarch64-linux-android".to_string()],
             bindings: vec!["dart".to_string()],
             artifacts: vec![],
             description: None,
         });
-        manifest.bindings.catalog[0].platforms = vec!["android".to_string()];
+        manifest.bindings.catalog[0].platforms = vec!["android-arm64".to_string()];
 
         let result = validate(&manifest);
         assert!(matches!(
