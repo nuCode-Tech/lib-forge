@@ -11,7 +11,11 @@ Build native binaries once, publish them once, and reuse them everywhere. All in
 lib-forge provides:
 
 - Deterministic, content-addressed native builds (ABI-stable identity)
-- Cross-platform Rust compilation (desktop, Android, Apple, etc.)
+- Cross-platform Rust compilation (linux, windows, Android, Apple, etc.)
+
+## Configuring Targets
+
+LibForge tooling honors a per-project `libforge.yml` so consumers can choose which targets are built by default. See [docs/configuring-targets.md](docs/configuring-targets.md) for the expected schema and examples.
 - Standardized artifact naming and archive layouts
 - A single manifest describing all binaries in a release
 - GitHub Releases publishing
