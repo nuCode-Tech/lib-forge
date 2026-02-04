@@ -19,9 +19,6 @@ pub struct BuildInputs {
     /// ABI-affecting: UniFFI UDL.
     /// This defines the FFI surface for bindings.
     pub uniffi: Option<AbiInput<UniFfiInput>>,
-    /// ABI-affecting: libforge.yml config.
-    /// This captures build target selection and precompiled binary metadata.
-    pub libforge_yml: Option<AbiInput<NormalizedLibforgeConfig>>,
     /// ABI-affecting: libforge.yaml config.
     /// This captures build target selection and precompiled binary metadata.
     pub libforge_yaml: Option<AbiInput<NormalizedLibforgeConfig>>,
@@ -42,12 +39,9 @@ impl BuildInputs {
     ) -> std::io::Result<Self> {
         let cargo_toml_path = manifest_dir.join("Cargo.toml");
         let cargo_lock_path = manifest_dir.join("Cargo.lock");
-        let libforge_yml_path = manifest_dir.join("libforge.yml");
         let libforge_yaml_path = manifest_dir.join("libforge.yaml");
         let cargo_toml = std::fs::read_to_string(cargo_toml_path)?;
         let cargo_lock = std::fs::read_to_string(cargo_lock_path)?;
-        let libforge_yml = read_optional_file(&libforge_yml_path)?
-            .map(|contents| AbiInput::new(NormalizedLibforgeConfig(contents)));
         let libforge_yaml = read_optional_file(&libforge_yaml_path)?
             .map(|contents| AbiInput::new(NormalizedLibforgeConfig(contents)));
         Ok(Self {
@@ -55,7 +49,6 @@ impl BuildInputs {
             cargo_lock: AbiInput::new(CargoLockfile(cargo_lock)),
             rust_target_triple,
             uniffi,
-            libforge_yml,
             libforge_yaml,
             binding_metadata,
             manifest_schema_version,
@@ -83,13 +76,6 @@ impl BuildInputs {
                     .as_ref()
                     .and_then(|value| value.value.udl.as_ref())
                     .map(|value| BuildInputValue::Present(value.0.clone()))
-                    .unwrap_or(BuildInputValue::Absent),
-            ),
-            BuildInputField::abi(
-                "libforge.yml",
-                self.libforge_yml
-                    .as_ref()
-                    .map(|value| BuildInputValue::Present(value.value.0.clone()))
                     .unwrap_or(BuildInputValue::Absent),
             ),
             BuildInputField::abi(
@@ -143,7 +129,7 @@ pub struct CargoLockfile(pub String);
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NormalizedUdl(pub String);
 
-/// Normalized libforge.yml/libforge.yaml contents.
+/// Normalized libforge.yaml contents.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NormalizedLibforgeConfig(pub String);
 

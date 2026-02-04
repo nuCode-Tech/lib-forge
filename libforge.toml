@@ -1,5 +1,0 @@
-[tool]
-name = "libforge"
-
-[build]
-default_targets = ["linux", "android", "apple", "windows"]

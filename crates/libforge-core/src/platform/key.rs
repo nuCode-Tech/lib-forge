@@ -1,4 +1,3 @@
-
 use std::fmt;
 use std::str::FromStr;
 
@@ -172,7 +171,6 @@ impl fmt::Display for PackagingFormat {
     }
 }
 
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PackagingSupport {
     Known(&'static [PackagingFormat]),
@@ -215,8 +213,10 @@ const ANDROID_RUST_TARGETS_ARMV7: &[&str] = &["armv7-linux-androideabi"];
 const ANDROID_RUST_TARGETS_X86_64: &[&str] = &["x86_64-linux-android"];
 const IOS_RUST_TARGETS_DEVICE: &[&str] = &["aarch64-apple-ios"];
 const IOS_RUST_TARGETS_SIMULATOR: &[&str] = &["x86_64-apple-ios", "aarch64-apple-ios-sim"];
-const LINUX_RUST_TARGETS_X86_64: &[&str] = &["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"];
-const LINUX_RUST_TARGETS_AARCH64: &[&str] = &["aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl"];
+const LINUX_RUST_TARGETS_X86_64: &[&str] =
+    &["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"];
+const LINUX_RUST_TARGETS_AARCH64: &[&str] =
+    &["aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl"];
 const MACOS_RUST_TARGETS_ARM64: &[&str] = &["aarch64-apple-darwin"];
 const MACOS_RUST_TARGETS_X86_64: &[&str] = &["x86_64-apple-darwin"];
 const WINDOWS_RUST_TARGETS_X86_64_MSVC: &[&str] = &["x86_64-pc-windows-msvc"];
@@ -361,6 +361,10 @@ static PLATFORM_REGISTRY: &[PlatformDescriptor] = &[
 
 pub fn registry() -> &'static [PlatformDescriptor] {
     PLATFORM_REGISTRY
+}
+
+pub fn all_platform_keys() -> Vec<PlatformKey> {
+    registry().iter().map(|entry| entry.key).collect()
 }
 
 pub fn platforms_for_rust_target(triple: &str) -> Vec<PlatformKey> {
