@@ -59,8 +59,8 @@ mod tests {
     };
 
     const GOLDEN_HASH_V1: &str =
-        "b1-718326ba3c93139351b2b9872cba358169cee3656350d56f3f025bd73c188157";
-    const GOLDEN_CANONICAL_JSON_V1: &str = r#"{"inputs":[{"affects_abi":true,"name":"binding.metadata","value":"dart:sdk_constraint=3.0;ffi_abi=1|kotlin:min_sdk=21;jvm_target=1.8;ndk_abis=arm64-v8a,x86_64|python:abi_tag=cp311;platform_tag=manylinux_2_28|swift:toolchain=5.9;deployment_target=13.0"},{"affects_abi":true,"name":"cargo.lock","value":"version = 3\n[[package]]\nname = \"demo\"\nversion = \"0.1.0\"\n"},{"affects_abi":true,"name":"cargo.toml","value":"[package]\nname = \"demo\"\nversion = \"0.1.0\"\n"},{"affects_abi":true,"name":"libforge.yaml","value":null},{"affects_abi":true,"name":"libforge.yml","value":"build:\n  targets:\n    - linux\nprecompiled_binaries:\n  url_prefix: https://github.com/stax/lib-forge/releases/download/precompiled_\n  public_key: demo-public-key\n"},{"affects_abi":true,"name":"manifest.schema_version","value":"libforge.manifest.v1"},{"affects_abi":true,"name":"rust.target_triple","value":"aarch64-apple-darwin"},{"affects_abi":true,"name":"uniffi.udl","value":"namespace demo; interface Demo { string ping(); };"}],"version":"b1"}"#;
+        "b1-27990a950e05e88ae9e3b83c40f4af8a9fa0a83a07489b808d83ab4b0082f558";
+    const GOLDEN_CANONICAL_JSON_V1: &str = r#"{"inputs":[{"affects_abi":true,"name":"binding.metadata","value":"dart:sdk_constraint=3.0;ffi_abi=1|kotlin:min_sdk=21;jvm_target=1.8;ndk_abis=arm64-v8a,x86_64|python:abi_tag=cp311;platform_tag=manylinux_2_28|swift:toolchain=5.9;deployment_target=13.0"},{"affects_abi":true,"name":"cargo.lock","value":"version = 3\n[[package]]\nname = \"demo\"\nversion = \"0.1.0\"\n"},{"affects_abi":true,"name":"cargo.toml","value":"[package]\nname = \"demo\"\nversion = \"0.1.0\"\n"},{"affects_abi":true,"name":"libforge.yaml","value":"build:\n  targets:\n    - linux\nprecompiled_binaries:\n  url_prefix: https://github.com/stax/lib-forge/releases/download/precompiled_\n  public_key: demo-public-key\n"},{"affects_abi":true,"name":"manifest.schema_version","value":"libforge.manifest.v1"},{"affects_abi":true,"name":"rust.target_triple","value":"aarch64-apple-darwin"},{"affects_abi":true,"name":"uniffi.udl","value":"namespace demo; interface Demo { string ping(); };"}],"version":"b1"}"#;
 
     fn sample_inputs() -> BuildInputs {
         BuildInputs {
@@ -76,10 +76,9 @@ mod tests {
                     "namespace demo; interface Demo { string ping(); };".to_string(),
                 )),
             })),
-            libforge_yml: Some(AbiInput::new(NormalizedLibforgeConfig(
+            libforge_yaml: Some(AbiInput::new(NormalizedLibforgeConfig(
                 "build:\n  targets:\n    - linux\nprecompiled_binaries:\n  url_prefix: https://github.com/stax/lib-forge/releases/download/precompiled_\n  public_key: demo-public-key\n".to_string(),
             ))),
-            libforge_yaml: None,
             binding_metadata: AbiInput::new(BindingMetadataSet {
                 bindings: vec![
                     BindingMetadata::Dart(DartBinding {
