@@ -198,7 +198,7 @@
       "properties": {
         "default": {
           "type": "string",
-          "description": "Canonical platform key (for example, linux-x86_64)."
+          "description": "Rust target triple (for example, x86_64-unknown-linux-gnu)."
         },
         "targets": {
           "type": "array",
@@ -215,7 +215,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Canonical platform key (for example, linux-x86_64)."
+          "description": "Rust target triple (for example, x86_64-unknown-linux-gnu)."
         },
         "triples": {
           "type": "array",
