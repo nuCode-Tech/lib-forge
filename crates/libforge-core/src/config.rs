@@ -2,19 +2,14 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::platform::{all_platform_keys, PlatformKey, PlatformKeyError};
+use crate::platform::{all_rust_targets, is_supported_rust_target};
 
 #[derive(Debug)]
 pub enum ConfigError {
     Io(std::io::Error),
     Yaml(serde_yaml::Error),
-    MissingTargets {
-        path: String,
-    },
-    InvalidTarget {
-        target: String,
-        source: PlatformKeyError,
-    },
+    MissingTargets { path: String },
+    InvalidTarget { target: String },
 }
 
 impl std::fmt::Display for ConfigError {
@@ -25,8 +20,8 @@ impl std::fmt::Display for ConfigError {
             ConfigError::MissingTargets { path } => {
                 write!(f, "config '{}' must declare build.targets", path)
             }
-            ConfigError::InvalidTarget { target, source } => {
-                write!(f, "invalid build target '{}': {}", target, source)
+            ConfigError::InvalidTarget { target } => {
+                write!(f, "invalid build target '{}'", target)
             }
         }
     }
@@ -46,12 +41,32 @@ struct LibforgeConfig {
 struct BuildConfig {
     #[serde(default)]
     targets: Vec<String>,
+    #[serde(default)]
+    toolchain: ToolchainConfig,
 }
 
-pub fn build_targets(manifest_dir: &Path) -> Result<Vec<PlatformKey>, ConfigError> {
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ToolchainConfig {
+    #[serde(default)]
+    channel: Option<String>,
+}
+
+#[derive(Debug, Default)]
+pub struct ToolchainSettings {
+    pub channel: Option<String>,
+    pub targets: Vec<String>,
+}
+
+pub fn build_targets(manifest_dir: &Path) -> Result<Vec<String>, ConfigError> {
     let (path, contents) = match read_optional_config(manifest_dir)? {
         Some(value) => value,
-        None => return Ok(all_platform_keys()),
+        None => {
+            return Ok(all_rust_targets()
+                .into_iter()
+                .map(|value| value.to_string())
+                .collect())
+        }
     };
 
     let config: LibforgeConfig = serde_yaml::from_str(&contents).map_err(ConfigError::Yaml)?;
@@ -61,17 +76,36 @@ pub fn build_targets(manifest_dir: &Path) -> Result<Vec<PlatformKey>, ConfigErro
 
     let mut targets = Vec::with_capacity(config.build.targets.len());
     for target in config.build.targets {
-        let parsed =
-            target
-                .parse::<PlatformKey>()
-                .map_err(|source| ConfigError::InvalidTarget {
-                    target: target.clone(),
-                    source,
-                })?;
-        targets.push(parsed);
+        if !is_supported_rust_target(&target) {
+            return Err(ConfigError::InvalidTarget { target });
+        }
+        targets.push(target);
     }
 
     Ok(targets)
+}
+
+pub fn toolchain_settings(manifest_dir: &Path) -> Result<ToolchainSettings, ConfigError> {
+    let (_path, contents) = match read_optional_config(manifest_dir)? {
+        Some(value) => value,
+        None => {
+            return Ok(ToolchainSettings {
+                channel: None,
+                targets: all_rust_targets()
+                    .into_iter()
+                    .map(|value| value.to_string())
+                    .collect(),
+            })
+        }
+    };
+
+    let config: LibforgeConfig = serde_yaml::from_str(&contents).map_err(ConfigError::Yaml)?;
+    let targets = build_targets(manifest_dir)?;
+
+    Ok(ToolchainSettings {
+        channel: config.build.toolchain.channel,
+        targets,
+    })
 }
 
 fn read_optional_config(manifest_dir: &Path) -> Result<Option<(String, String)>, ConfigError> {
@@ -107,8 +141,8 @@ mod tests {
         let dir = temp_dir("missing-config");
         let targets = build_targets(&dir).expect("targets");
         assert!(!targets.is_empty());
-        assert!(targets.contains(&PlatformKey::LinuxX86_64));
-        assert!(targets.contains(&PlatformKey::AndroidArm64));
+        assert!(targets.contains(&"x86_64-unknown-linux-gnu".to_string()));
+        assert!(targets.contains(&"aarch64-linux-android".to_string()));
     }
 
     #[test]
@@ -117,13 +151,13 @@ mod tests {
         let path = dir.join("libforge.yaml");
         std::fs::write(
             path,
-            "build:\n  targets:\n    - linux-x86_64\n    - android-arm64\n",
+            "build:\n  targets:\n    - x86_64-unknown-linux-gnu\n    - aarch64-linux-android\n",
         )
         .expect("write config");
         let targets = build_targets(&dir).expect("targets");
         assert_eq!(targets.len(), 2);
-        assert_eq!(targets[0], PlatformKey::LinuxX86_64);
-        assert_eq!(targets[1], PlatformKey::AndroidArm64);
+        assert_eq!(targets[0], "x86_64-unknown-linux-gnu");
+        assert_eq!(targets[1], "aarch64-linux-android");
     }
 
     #[test]

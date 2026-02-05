@@ -266,14 +266,14 @@ mod tests {
                 catalog: vec![BindingDescriptor {
                     name: "dart".to_string(),
                     version: "3.0.0".to_string(),
-                    platforms: vec!["linux-x86_64".to_string()],
+                    platforms: vec!["x86_64-unknown-linux-gnu".to_string()],
                     artifacts: vec!["bundle".to_string()],
                 }],
             },
             platforms: Platforms {
-                default: "linux-x86_64".to_string(),
+                default: "x86_64-unknown-linux-gnu".to_string(),
                 targets: vec![Platform {
-                    name: "linux-x86_64".to_string(),
+                    name: "x86_64-unknown-linux-gnu".to_string(),
                     triples: vec!["x86_64-unknown-linux-gnu".to_string()],
                     bindings: vec!["dart".to_string()],
                     artifacts: vec!["bundle".to_string()],
@@ -335,7 +335,7 @@ mod tests {
     fn duplicate_artifact_identifier_fails() {
         let mut manifest = sample_manifest();
         manifest.platforms.targets.push(Platform {
-            name: "android-arm64".to_string(),
+            name: "aarch64-linux-android".to_string(),
             triples: vec!["aarch64-linux-android".to_string()],
             bindings: vec!["dart".to_string()],
             artifacts: vec!["bundle".to_string()],
@@ -365,13 +365,13 @@ mod tests {
     fn artifact_platform_mismatch_fails() {
         let mut manifest = sample_manifest();
         manifest.platforms.targets.push(Platform {
-            name: "android-arm64".to_string(),
+            name: "aarch64-linux-android".to_string(),
             triples: vec!["aarch64-linux-android".to_string()],
             bindings: vec!["dart".to_string()],
             artifacts: vec![],
             description: None,
         });
-        manifest.bindings.catalog[0].platforms = vec!["android-arm64".to_string()];
+        manifest.bindings.catalog[0].platforms = vec!["aarch64-linux-android".to_string()];
 
         let result = validate(&manifest);
         assert!(matches!(

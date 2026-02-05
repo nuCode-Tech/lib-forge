@@ -131,13 +131,19 @@ mod tests {
     fn artifact_name_is_deterministic() {
         let key = PlatformKey::LinuxX86_64;
         let name = artifact_name("libname", "b1-abc123", &key, ArchiveKind::TarGz).expect("name");
-        assert_eq!(name, "libname-b1-abc123-linux-x86_64.tar.gz");
+        assert_eq!(name, "libname-b1-abc123-x86_64-unknown-linux-gnu.tar.gz");
     }
 
     #[test]
     fn checksum_name_appends_extension() {
-        let checksum = checksum_name("libname-build-1-linux-x86_64.tar.gz", ChecksumKind::Sha256);
-        assert_eq!(checksum, "libname-build-1-linux-x86_64.tar.gz.sha256");
+        let checksum = checksum_name(
+            "libname-build-1-x86_64-unknown-linux-gnu.tar.gz",
+            ChecksumKind::Sha256,
+        );
+        assert_eq!(
+            checksum,
+            "libname-build-1-x86_64-unknown-linux-gnu.tar.gz.sha256"
+        );
     }
 
     #[test]

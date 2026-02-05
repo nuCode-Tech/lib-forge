@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::platform::{PlatformFamily, PlatformKey, PlatformOs};
+use crate::platform::PlatformKey;
 
 pub const MANIFEST_FILE_NAME: &str = "manifest.json";
 pub const CHECKSUMS_FILE_NAME: &str = "checksums.txt";
@@ -36,20 +36,20 @@ pub fn archive_layout(lib_name: &str, platform_key: &PlatformKey) -> ArchiveLayo
 }
 
 pub fn library_filename(lib_name: &str, platform_key: &PlatformKey) -> String {
-    match platform_key.os() {
-        PlatformOs::Linux | PlatformOs::Android => format!("lib{}.so", lib_name),
-        PlatformOs::Windows => format!("{}.dll", lib_name),
-        PlatformOs::Macos | PlatformOs::Ios => format!("lib{}.dylib", lib_name),
+    if is_windows(platform_key) {
+        return format!("{}.dll", lib_name);
     }
+    if is_macos(platform_key) || is_ios(platform_key) {
+        return format!("lib{}.dylib", lib_name);
+    }
+    format!("lib{}.so", lib_name)
 }
 
 pub fn default_archive_kind(platform_key: &PlatformKey) -> super::naming::ArchiveKind {
-    match platform_key.os() {
-        PlatformOs::Ios | PlatformOs::Macos | PlatformOs::Windows => {
-            super::naming::ArchiveKind::Zip
-        }
-        PlatformOs::Linux | PlatformOs::Android => super::naming::ArchiveKind::TarGz,
+    if is_ios(platform_key) || is_macos(platform_key) || is_windows(platform_key) {
+        return super::naming::ArchiveKind::Zip;
     }
+    super::naming::ArchiveKind::TarGz
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,13 +60,38 @@ pub enum LayoutVariant {
 }
 
 pub fn layout_variant(platform_key: &PlatformKey) -> LayoutVariant {
-    match platform_key.family() {
-        PlatformFamily::Apple => LayoutVariant::Apple,
-        PlatformFamily::Android => LayoutVariant::Android,
-        PlatformFamily::Linux | PlatformFamily::Windows | PlatformFamily::Desktop => {
-            LayoutVariant::Desktop
-        }
+    if is_android(platform_key) {
+        return LayoutVariant::Android;
     }
+    if is_macos(platform_key) || is_ios(platform_key) {
+        return LayoutVariant::Apple;
+    }
+    LayoutVariant::Desktop
+}
+
+fn is_android(platform_key: &PlatformKey) -> bool {
+    matches!(
+        platform_key,
+        PlatformKey::AndroidArm64 | PlatformKey::AndroidArmv7 | PlatformKey::AndroidX86_64
+    )
+}
+
+fn is_ios(platform_key: &PlatformKey) -> bool {
+    matches!(
+        platform_key,
+        PlatformKey::IosArm64 | PlatformKey::IosSimulatorArm64 | PlatformKey::IosSimulatorX86_64
+    )
+}
+
+fn is_macos(platform_key: &PlatformKey) -> bool {
+    matches!(platform_key, PlatformKey::MacosArm64 | PlatformKey::MacosX86_64)
+}
+
+fn is_windows(platform_key: &PlatformKey) -> bool {
+    matches!(
+        platform_key,
+        PlatformKey::WindowsX86_64Msvc | PlatformKey::WindowsArm64Msvc
+    )
 }
 
 pub fn required_entries(layout: &ArchiveLayout) -> Vec<String> {

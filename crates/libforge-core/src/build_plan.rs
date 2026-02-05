@@ -1,5 +1,6 @@
 use crate::artifact::ArchiveKind;
 use crate::platform::PlatformKey;
+use crate::toolchain::Toolchain;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BuildPlan {
@@ -12,6 +13,7 @@ pub struct BuildPlan {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BuildProfile {
     pub name: String,
+    pub toolchain: Toolchain,
     pub cargo_args: Vec<String>,
     pub rustflags: Vec<String>,
     pub env: Vec<BuildEnvVar>,

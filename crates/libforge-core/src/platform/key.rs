@@ -9,9 +9,9 @@ pub enum PlatformKey {
     LinuxAarch64,
     MacosArm64,
     MacosX86_64,
-    MacosUniversal,
     IosArm64,
-    IosSimulator,
+    IosSimulatorArm64,
+    IosSimulatorX86_64,
     AndroidArm64,
     AndroidArmv7,
     AndroidX86_64,
@@ -26,18 +26,6 @@ impl PlatformKey {
 
     pub fn as_str(self) -> &'static str {
         self.descriptor().key_str
-    }
-
-    pub fn family(self) -> PlatformFamily {
-        self.descriptor().family
-    }
-
-    pub fn os(self) -> PlatformOs {
-        self.descriptor().os
-    }
-
-    pub fn architecture(self) -> Option<Architecture> {
-        self.descriptor().architecture
     }
 
     pub fn rust_targets(self) -> &'static [&'static str] {
@@ -78,72 +66,6 @@ impl FromStr for PlatformKey {
             .find(|entry| entry.key_str == value)
             .map(|entry| entry.key)
             .ok_or_else(|| PlatformKeyError::UnknownKey(value.to_string()))
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PlatformFamily {
-    Desktop,
-    Apple,
-    Android,
-    Linux,
-    Windows,
-}
-
-impl fmt::Display for PlatformFamily {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = match self {
-            PlatformFamily::Desktop => "desktop",
-            PlatformFamily::Apple => "apple",
-            PlatformFamily::Android => "android",
-            PlatformFamily::Linux => "linux",
-            PlatformFamily::Windows => "windows",
-        };
-        f.write_str(value)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PlatformOs {
-    Linux,
-    Windows,
-    Android,
-    Macos,
-    Ios,
-}
-
-impl fmt::Display for PlatformOs {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = match self {
-            PlatformOs::Linux => "linux",
-            PlatformOs::Windows => "windows",
-            PlatformOs::Android => "android",
-            PlatformOs::Macos => "macos",
-            PlatformOs::Ios => "ios",
-        };
-        f.write_str(value)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Architecture {
-    X86_64,
-    Aarch64,
-    Arm64,
-    Armv7,
-    Universal,
-}
-
-impl fmt::Display for Architecture {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = match self {
-            Architecture::X86_64 => "x86_64",
-            Architecture::Aarch64 => "aarch64",
-            Architecture::Arm64 => "arm64",
-            Architecture::Armv7 => "armv7",
-            Architecture::Universal => "universal",
-        };
-        f.write_str(value)
     }
 }
 
@@ -193,9 +115,6 @@ pub enum SupportStatus {
 pub struct PlatformDescriptor {
     pub key: PlatformKey,
     pub key_str: &'static str,
-    pub family: PlatformFamily,
-    pub os: PlatformOs,
-    pub architecture: Option<Architecture>,
     pub rust_targets: &'static [&'static str],
     pub packaging: PackagingSupport,
     pub bindings: BindingSupport,
@@ -212,11 +131,10 @@ const ANDROID_RUST_TARGETS_ARM64: &[&str] = &["aarch64-linux-android"];
 const ANDROID_RUST_TARGETS_ARMV7: &[&str] = &["armv7-linux-androideabi"];
 const ANDROID_RUST_TARGETS_X86_64: &[&str] = &["x86_64-linux-android"];
 const IOS_RUST_TARGETS_DEVICE: &[&str] = &["aarch64-apple-ios"];
-const IOS_RUST_TARGETS_SIMULATOR: &[&str] = &["x86_64-apple-ios", "aarch64-apple-ios-sim"];
-const LINUX_RUST_TARGETS_X86_64: &[&str] =
-    &["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"];
-const LINUX_RUST_TARGETS_AARCH64: &[&str] =
-    &["aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl"];
+const IOS_RUST_TARGETS_SIMULATOR_ARM64: &[&str] = &["aarch64-apple-ios-sim"];
+const IOS_RUST_TARGETS_SIMULATOR_X86_64: &[&str] = &["x86_64-apple-ios"];
+const LINUX_RUST_TARGETS_X86_64: &[&str] = &["x86_64-unknown-linux-gnu"];
+const LINUX_RUST_TARGETS_AARCH64: &[&str] = &["aarch64-unknown-linux-gnu"];
 const MACOS_RUST_TARGETS_ARM64: &[&str] = &["aarch64-apple-darwin"];
 const MACOS_RUST_TARGETS_X86_64: &[&str] = &["x86_64-apple-darwin"];
 const WINDOWS_RUST_TARGETS_X86_64_MSVC: &[&str] = &["x86_64-pc-windows-msvc"];
@@ -239,120 +157,84 @@ const DEFAULT_BINDINGS: BindingSupport = BindingSupport::Known(SUPPORTED_BINDING
 static PLATFORM_REGISTRY: &[PlatformDescriptor] = &[
     PlatformDescriptor {
         key: PlatformKey::LinuxX86_64,
-        key_str: "linux-x86_64",
-        family: PlatformFamily::Linux,
-        os: PlatformOs::Linux,
-        architecture: Some(Architecture::X86_64),
+        key_str: "x86_64-unknown-linux-gnu",
         rust_targets: LINUX_RUST_TARGETS_X86_64,
         packaging: DEFAULT_LINUX_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::LinuxAarch64,
-        key_str: "linux-aarch64",
-        family: PlatformFamily::Linux,
-        os: PlatformOs::Linux,
-        architecture: Some(Architecture::Aarch64),
+        key_str: "aarch64-unknown-linux-gnu",
         rust_targets: LINUX_RUST_TARGETS_AARCH64,
         packaging: DEFAULT_LINUX_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::MacosArm64,
-        key_str: "macos-arm64",
-        family: PlatformFamily::Apple,
-        os: PlatformOs::Macos,
-        architecture: Some(Architecture::Arm64),
+        key_str: "aarch64-apple-darwin",
         rust_targets: MACOS_RUST_TARGETS_ARM64,
         packaging: DEFAULT_APPLE_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::MacosX86_64,
-        key_str: "macos-x86_64",
-        family: PlatformFamily::Apple,
-        os: PlatformOs::Macos,
-        architecture: Some(Architecture::X86_64),
+        key_str: "x86_64-apple-darwin",
         rust_targets: MACOS_RUST_TARGETS_X86_64,
         packaging: DEFAULT_APPLE_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
-        key: PlatformKey::MacosUniversal,
-        key_str: "macos-universal",
-        family: PlatformFamily::Apple,
-        os: PlatformOs::Macos,
-        architecture: Some(Architecture::Universal),
-        rust_targets: &[],
-        packaging: DEFAULT_APPLE_PACKAGING,
-        bindings: DEFAULT_BINDINGS,
-    },
-    PlatformDescriptor {
         key: PlatformKey::IosArm64,
-        key_str: "ios-arm64",
-        family: PlatformFamily::Apple,
-        os: PlatformOs::Ios,
-        architecture: Some(Architecture::Arm64),
+        key_str: "aarch64-apple-ios",
         rust_targets: IOS_RUST_TARGETS_DEVICE,
         packaging: DEFAULT_APPLE_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
-        key: PlatformKey::IosSimulator,
-        key_str: "ios-simulator",
-        family: PlatformFamily::Apple,
-        os: PlatformOs::Ios,
-        architecture: None,
-        rust_targets: IOS_RUST_TARGETS_SIMULATOR,
+        key: PlatformKey::IosSimulatorArm64,
+        key_str: "aarch64-apple-ios-sim",
+        rust_targets: IOS_RUST_TARGETS_SIMULATOR_ARM64,
+        packaging: DEFAULT_APPLE_PACKAGING,
+        bindings: DEFAULT_BINDINGS,
+    },
+    PlatformDescriptor {
+        key: PlatformKey::IosSimulatorX86_64,
+        key_str: "x86_64-apple-ios",
+        rust_targets: IOS_RUST_TARGETS_SIMULATOR_X86_64,
         packaging: DEFAULT_APPLE_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::AndroidArm64,
-        key_str: "android-arm64",
-        family: PlatformFamily::Android,
-        os: PlatformOs::Android,
-        architecture: Some(Architecture::Arm64),
+        key_str: "aarch64-linux-android",
         rust_targets: ANDROID_RUST_TARGETS_ARM64,
         packaging: DEFAULT_ANDROID_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::AndroidArmv7,
-        key_str: "android-armv7",
-        family: PlatformFamily::Android,
-        os: PlatformOs::Android,
-        architecture: Some(Architecture::Armv7),
+        key_str: "armv7-linux-androideabi",
         rust_targets: ANDROID_RUST_TARGETS_ARMV7,
         packaging: DEFAULT_ANDROID_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::AndroidX86_64,
-        key_str: "android-x86_64",
-        family: PlatformFamily::Android,
-        os: PlatformOs::Android,
-        architecture: Some(Architecture::X86_64),
+        key_str: "x86_64-linux-android",
         rust_targets: ANDROID_RUST_TARGETS_X86_64,
         packaging: DEFAULT_ANDROID_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::WindowsX86_64Msvc,
-        key_str: "windows-x86_64-msvc",
-        family: PlatformFamily::Windows,
-        os: PlatformOs::Windows,
-        architecture: Some(Architecture::X86_64),
+        key_str: "x86_64-pc-windows-msvc",
         rust_targets: WINDOWS_RUST_TARGETS_X86_64_MSVC,
         packaging: DEFAULT_WINDOWS_PACKAGING,
         bindings: DEFAULT_BINDINGS,
     },
     PlatformDescriptor {
         key: PlatformKey::WindowsArm64Msvc,
-        key_str: "windows-arm64-msvc",
-        family: PlatformFamily::Windows,
-        os: PlatformOs::Windows,
-        architecture: Some(Architecture::Arm64),
+        key_str: "aarch64-pc-windows-msvc",
         rust_targets: WINDOWS_RUST_TARGETS_ARM64_MSVC,
         packaging: DEFAULT_WINDOWS_PACKAGING,
         bindings: DEFAULT_BINDINGS,
@@ -373,6 +255,24 @@ pub fn platforms_for_rust_target(triple: &str) -> Vec<PlatformKey> {
         .filter(|entry| entry.rust_targets.iter().any(|target| *target == triple))
         .map(|entry| entry.key)
         .collect()
+}
+
+pub fn all_rust_targets() -> Vec<&'static str> {
+    let mut targets = Vec::new();
+    for entry in registry() {
+        for target in entry.rust_targets {
+            if !targets.contains(target) {
+                targets.push(*target);
+            }
+        }
+    }
+    targets
+}
+
+pub fn is_supported_rust_target(triple: &str) -> bool {
+    registry()
+        .iter()
+        .any(|entry| entry.rust_targets.iter().any(|target| *target == triple))
 }
 
 pub fn binding_support(platform: PlatformKey, binding: &str) -> SupportStatus {
@@ -415,10 +315,10 @@ impl fmt::Display for PlatformKeyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PlatformKeyError::InvalidFormat => {
-                write!(f, "platform key must be lowercase and hyphenated")
+                write!(f, "target triple must be lowercase and hyphenated")
             }
             PlatformKeyError::UnknownKey(value) => {
-                write!(f, "unknown platform key '{}'", value)
+                write!(f, "unknown target triple '{}'", value)
             }
         }
     }

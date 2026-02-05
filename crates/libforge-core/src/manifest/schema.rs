@@ -235,30 +235,30 @@ mod tests {
       {
         "name": "dart",
         "version": "3.0.0",
-        "platforms": ["linux-x86_64", "android-arm64"],
+        "platforms": ["x86_64-unknown-linux-gnu", "aarch64-linux-android"],
         "artifacts": ["bundle"]
       },
       {
         "name": "python",
         "version": "3.11",
-        "platforms": ["linux-x86_64"],
+        "platforms": ["x86_64-unknown-linux-gnu"],
         "artifacts": ["wheel"]
       }
     ]
   },
   "platforms": {
-    "default": "linux-x86_64",
+    "default": "x86_64-unknown-linux-gnu",
     "targets": [
       {
-        "name": "linux-x86_64",
+        "name": "x86_64-unknown-linux-gnu",
         "triples": ["x86_64-unknown-linux-gnu"],
         "bindings": ["dart", "python"],
         "artifacts": ["bundle", "wheel"],
         "description": "Primary developer linux target"
       },
       {
-        "name": "android-arm64",
-        "triples": ["armv7-linux-androideabi", "aarch64-linux-android"],
+        "name": "aarch64-linux-android",
+        "triples": ["aarch64-linux-android"],
         "bindings": ["dart"],
         "artifacts": ["bundle"]
       }
@@ -276,11 +276,11 @@ mod tests {
         assert_eq!(manifest.build.identity.host, "linux");
         assert!(manifest.artifacts.naming.include_binding);
         assert_eq!(manifest.bindings.catalog.len(), 2);
-        assert_eq!(manifest.platforms.default, "linux-x86_64");
+        assert_eq!(manifest.platforms.default, "x86_64-unknown-linux-gnu");
         assert!(manifest
             .platforms
             .targets
             .iter()
-            .any(|platform| platform.name == "android-arm64"));
+            .any(|platform| platform.name == "aarch64-linux-android"));
     }
 }
