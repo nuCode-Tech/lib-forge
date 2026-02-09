@@ -126,20 +126,27 @@ pub fn run(args: BundleArgs) -> Result<BundleOutcome, String> {
         let archive_name =
             artifact_name(&package_name, &build_id, &platform, archive_kind).map_err(|err| err.to_string())?;
         let target_root = resolve_target_root(&manifest_dir);
-        let library_path = target_root
-            .join("target")
-            .join(target)
-            .join(&args.profile)
-            .join(libforge_core::artifact::layout::library_filename(
-                &package_name,
-                &platform,
-            ));
-        if !library_path.exists() {
+        let library_path = resolve_library_path(
+            &target_root,
+            target,
+            &args.profile,
+            &package_name,
+            platform,
+        );
+        let Some(library_path) = library_path else {
             return Err(format!(
                 "library not found at '{}'; run libforge build first",
-                library_path.display()
+                target_root
+                    .join("target")
+                    .join(target)
+                    .join(&args.profile)
+                    .join(libforge_core::artifact::layout::library_filename(
+                        &package_name,
+                        &platform,
+                    ))
+                    .display()
             ));
-        }
+        };
         let built_artifact = BuiltArtifact {
             platform,
             build_id: build_id.clone(),
@@ -216,6 +223,51 @@ fn resolve_target_root(manifest_dir: &Path) -> PathBuf {
         current = dir.parent();
     }
     manifest_dir.to_path_buf()
+}
+
+fn resolve_library_path(
+    target_root: &Path,
+    target: &str,
+    profile: &str,
+    package_name: &str,
+    platform: PlatformKey,
+) -> Option<PathBuf> {
+    let file_name = libforge_core::artifact::layout::library_filename(package_name, &platform);
+    let profile_dir = target_root.join("target").join(target).join(profile);
+    let primary = profile_dir.join(&file_name);
+    if primary.exists() {
+        return Some(primary);
+    }
+
+    let deps_dir = profile_dir.join("deps");
+    let deps_exact = deps_dir.join(&file_name);
+    if deps_exact.exists() {
+        return Some(deps_exact);
+    }
+
+    let extension = Path::new(&file_name)
+        .extension()
+        .map(|value| value.to_string_lossy().into_owned())?;
+    let stem = Path::new(&file_name)
+        .file_stem()
+        .map(|value| value.to_string_lossy().into_owned())?;
+    let entries = fs::read_dir(deps_dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let ext_matches = path
+            .extension()
+            .map(|value| value.to_string_lossy() == extension)
+            .unwrap_or(false);
+        let stem_matches = path
+            .file_stem()
+            .map(|value| value.to_string_lossy().starts_with(&stem))
+            .unwrap_or(false);
+        if ext_matches && stem_matches {
+            return Some(path);
+        }
+    }
+
+    None
 }
 
 pub fn package_metadata(manifest_dir: &Path) -> Result<(String, String), String> {
