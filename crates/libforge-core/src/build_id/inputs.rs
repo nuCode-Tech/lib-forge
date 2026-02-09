@@ -29,10 +29,9 @@ impl BuildInputs {
         uniffi: Option<AbiInput<UniFfiInput>>,
     ) -> std::io::Result<Self> {
         let cargo_toml_path = manifest_dir.join("Cargo.toml");
-        let cargo_lock_path = manifest_dir.join("Cargo.lock");
         let libforge_yaml_path = manifest_dir.join("libforge.yaml");
         let cargo_toml = std::fs::read_to_string(cargo_toml_path)?;
-        let cargo_lock = std::fs::read_to_string(cargo_lock_path)?;
+        let cargo_lock = read_cargo_lock(manifest_dir)?;
         let libforge_yaml = read_optional_file(&libforge_yaml_path)?
             .map(|contents| AbiInput::new(NormalizedLibforgeConfig(contents)));
         Ok(Self {
@@ -157,4 +156,22 @@ fn read_optional_file(path: &std::path::Path) -> std::io::Result<Option<String>>
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(error),
     }
+}
+
+fn read_cargo_lock(manifest_dir: &std::path::Path) -> std::io::Result<String> {
+    let mut current = Some(manifest_dir);
+    while let Some(dir) = current {
+        let lock_path = dir.join("Cargo.lock");
+        match std::fs::read_to_string(&lock_path) {
+            Ok(contents) => return Ok(contents),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                current = dir.parent();
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "Cargo.lock not found in manifest dir or any ancestor",
+    ))
 }

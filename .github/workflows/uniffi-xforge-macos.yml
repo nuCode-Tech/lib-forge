@@ -22,8 +22,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Add target
         run: rustup target add aarch64-apple-darwin
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile --manifest-path examples/uniffi-xforge/Cargo.toml
       - name: Bundle artifacts (macOS)
         run: |
           cargo run -p libforge-cli -- bundle \
