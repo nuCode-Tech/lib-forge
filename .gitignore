@@ -1,7 +1,12 @@
 target/
-cargo.lock
 **/target/
+
+Cargo.lock
+
 .gradle/
 gradle.lockfile
-examples/uniffi-xforge/dart/.dart_tool/
+
 adapters/dart/.dart_tool/
+adapters/dart/pubspec.lock
+examples/uniffi-xforge/dart/.dart_tool/
+

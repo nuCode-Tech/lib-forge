@@ -1,0 +1,18 @@
+name: libforge_dart
+description: Dart adapter for LibForge precompiled artifacts.
+version: 0.1.0
+homepage: https://github.com/stax/lib-forge
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  code_assets: ^1.0.0
+
+  archive: ^4.0.0
+  logging: ^1.2.0
+  path: ^1.9.0
+  yaml: ^3.1.2
+  crypto: ^3.0.3
+  convert: ^3.1.1
+  http: ^1.2.2
+  ed25519_edwards: ^0.3.1
+  hooks: ^1.0.1
