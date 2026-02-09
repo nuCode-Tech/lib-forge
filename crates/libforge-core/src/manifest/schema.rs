@@ -26,6 +26,8 @@ pub struct Manifest {
     pub artifacts: Artifacts,
     pub bindings: Bindings,
     pub platforms: Platforms,
+    #[serde(default)]
+    pub signing: Option<Signing>,
 }
 
 fn default_schema_version() -> String {
@@ -84,18 +86,15 @@ pub struct BuildIdentity {
     pub features: Vec<String>,
 }
 
-/// Describes how artifacts are named and how their checksums are collected.
+/// Describes how artifacts are named.
 ///
-/// The `naming` block is required, while `checksums` is optional and defaults to
-/// an empty list. This section is the single source of truth for artifact
+/// The `naming` block is required. This section is the single source of truth for artifact
 /// naming because every adapter can interpret the template, delimiter, and
 /// inclusion flags consistently.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Artifacts {
     pub naming: ArtifactNaming,
-    #[serde(default)]
-    pub checksums: Vec<String>,
 }
 
 /// The naming template that tooling must honor when emitting artifacts.
@@ -184,6 +183,7 @@ pub struct Platforms {
 #[serde(rename_all = "camelCase")]
 pub struct Platform {
     pub name: String,
+    pub build_id: String,
     #[serde(default)]
     pub triples: Vec<String>,
     #[serde(default)]
@@ -192,6 +192,15 @@ pub struct Platform {
     pub artifacts: Vec<String>,
     #[serde(default)]
     pub description: Option<String>,
+}
+
+/// Optional manifest signing metadata.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Signing {
+    pub algorithm: String,
+    pub public_key: String,
+    pub signature: String,
 }
 
 #[cfg(test)]
@@ -226,8 +235,7 @@ mod tests {
       "delimiter": "-",
       "includePlatform": true,
       "includeBinding": true
-    },
-    "checksums": ["sha256"]
+    }
   },
   "bindings": {
     "primary": "dart",
@@ -251,6 +259,7 @@ mod tests {
     "targets": [
       {
         "name": "x86_64-unknown-linux-gnu",
+        "buildId": "b1-demo",
         "triples": ["x86_64-unknown-linux-gnu"],
         "bindings": ["dart", "python"],
         "artifacts": ["bundle", "wheel"],
@@ -258,6 +267,7 @@ mod tests {
       },
       {
         "name": "aarch64-linux-android",
+        "buildId": "b1-demo-android",
         "triples": ["aarch64-linux-android"],
         "bindings": ["dart"],
         "artifacts": ["bundle"]

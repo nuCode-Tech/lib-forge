@@ -2,8 +2,6 @@
 //!
 //! Excludes timestamps, absolute paths, environment variables, and CI metadata.
 
-use crate::bindings::BindingMetadataSet;
-
 /// ABI-affecting inputs that define a build identity.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BuildInputs {
@@ -22,11 +20,6 @@ pub struct BuildInputs {
     /// ABI-affecting: libforge.yaml config.
     /// This captures build target selection and precompiled binary metadata.
     pub libforge_yaml: Option<AbiInput<NormalizedLibforgeConfig>>,
-    /// ABI-affecting: binding metadata that affects ABI compatibility.
-    pub binding_metadata: AbiInput<BindingMetadataSet>,
-    /// ABI-affecting: libforge manifest schema version.
-    /// This ensures schema evolution invalidates incompatible build identities.
-    pub manifest_schema_version: AbiInput<String>,
 }
 
 impl BuildInputs {
@@ -34,8 +27,6 @@ impl BuildInputs {
         manifest_dir: &std::path::Path,
         rust_target_triple: AbiInput<String>,
         uniffi: Option<AbiInput<UniFfiInput>>,
-        binding_metadata: AbiInput<BindingMetadataSet>,
-        manifest_schema_version: AbiInput<String>,
     ) -> std::io::Result<Self> {
         let cargo_toml_path = manifest_dir.join("Cargo.toml");
         let cargo_lock_path = manifest_dir.join("Cargo.lock");
@@ -50,8 +41,6 @@ impl BuildInputs {
             rust_target_triple,
             uniffi,
             libforge_yaml,
-            binding_metadata,
-            manifest_schema_version,
         })
     }
 
@@ -85,15 +74,19 @@ impl BuildInputs {
                     .map(|value| BuildInputValue::Present(value.value.0.clone()))
                     .unwrap_or(BuildInputValue::Absent),
             ),
-            BuildInputField::abi(
-                "binding.metadata",
-                BuildInputValue::Present(self.binding_metadata.value.canonical_string()),
-            ),
-            BuildInputField::abi(
-                "manifest.schema_version",
-                BuildInputValue::Present(self.manifest_schema_version.value.clone()),
-            ),
         ]
+    }
+
+    /// Enumerate ABI-affecting fields but omit the rust target triple.
+    /// This yields a release identity shared across all targets.
+    pub fn fields_without_target(&self) -> Vec<BuildInputField> {
+        let mut fields = self.fields();
+        for field in &mut fields {
+            if field.name == "rust.target_triple" {
+                field.value = BuildInputValue::Absent;
+            }
+        }
+        fields
     }
 }
 

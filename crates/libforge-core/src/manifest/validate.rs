@@ -5,9 +5,6 @@ use crate::platform::PlatformKey;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ManifestError {
-    MissingChecksumAlgorithm {
-        algorithm: String,
-    },
     InvalidPlatformKey {
         platform: String,
     },
@@ -39,18 +36,14 @@ pub enum ManifestError {
     EmptyArtifactIdentifier {
         platform: String,
     },
+    MissingPlatformBuildId {
+        platform: String,
+    },
 }
 
 impl std::fmt::Display for ManifestError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ManifestError::MissingChecksumAlgorithm { algorithm } => {
-                write!(
-                    f,
-                    "manifest must declare checksum algorithm '{}'",
-                    algorithm
-                )
-            }
             ManifestError::InvalidPlatformKey { platform } => {
                 write!(f, "platform '{}' is not a valid platform key", platform)
             }
@@ -94,6 +87,9 @@ impl std::fmt::Display for ManifestError {
                 "platform '{}' contains an empty artifact identifier",
                 platform
             ),
+            ManifestError::MissingPlatformBuildId { platform } => {
+                write!(f, "platform '{}' missing build_id", platform)
+            }
         }
     }
 }
@@ -101,20 +97,14 @@ impl std::fmt::Display for ManifestError {
 impl std::error::Error for ManifestError {}
 
 pub fn validate(manifest: &Manifest) -> Result<(), ManifestError> {
-    if !manifest
-        .artifacts
-        .checksums
-        .iter()
-        .any(|value| value == "sha256")
-    {
-        return Err(ManifestError::MissingChecksumAlgorithm {
-            algorithm: "sha256".to_string(),
-        });
-    }
-
     for platform in &manifest.platforms.targets {
         if platform.name.parse::<PlatformKey>().is_err() {
             return Err(ManifestError::InvalidPlatformKey {
+                platform: platform.name.clone(),
+            });
+        }
+        if platform.build_id.trim().is_empty() {
+            return Err(ManifestError::MissingPlatformBuildId {
                 platform: platform.name.clone(),
             });
         }
@@ -233,6 +223,7 @@ mod tests {
     fn sample_manifest() -> Manifest {
         Manifest {
             schema_version: "libforge.manifest.v1".to_string(),
+            signing: None,
             package: Package {
                 name: "libforge-sample".to_string(),
                 version: "0.1.0".to_string(),
@@ -259,7 +250,6 @@ mod tests {
                     include_platform: true,
                     include_binding: true,
                 },
-                checksums: vec!["sha256".to_string()],
             },
             bindings: Bindings {
                 primary: None,
@@ -274,6 +264,7 @@ mod tests {
                 default: "x86_64-unknown-linux-gnu".to_string(),
                 targets: vec![Platform {
                     name: "x86_64-unknown-linux-gnu".to_string(),
+                    build_id: "b1-demo".to_string(),
                     triples: vec!["x86_64-unknown-linux-gnu".to_string()],
                     bindings: vec!["dart".to_string()],
                     artifacts: vec!["bundle".to_string()],
@@ -308,18 +299,6 @@ mod tests {
     }
 
     #[test]
-    fn missing_checksum_algorithm_fails() {
-        let mut manifest = sample_manifest();
-        manifest.artifacts.checksums = vec![];
-
-        let result = validate(&manifest);
-        assert!(matches!(
-            result,
-            Err(ManifestError::MissingChecksumAlgorithm { .. })
-        ));
-    }
-
-    #[test]
     fn binding_version_missing_fails() {
         let mut manifest = sample_manifest();
         manifest.bindings.catalog[0].version = " ".to_string();
@@ -336,6 +315,7 @@ mod tests {
         let mut manifest = sample_manifest();
         manifest.platforms.targets.push(Platform {
             name: "aarch64-linux-android".to_string(),
+            build_id: "b1-demo-android".to_string(),
             triples: vec!["aarch64-linux-android".to_string()],
             bindings: vec!["dart".to_string()],
             artifacts: vec!["bundle".to_string()],
@@ -370,6 +350,7 @@ mod tests {
             bindings: vec!["dart".to_string()],
             artifacts: vec![],
             description: None,
+            build_id: "b1-demo-android".to_string(),
         });
         manifest.bindings.catalog[0].platforms = vec!["aarch64-linux-android".to_string()];
 

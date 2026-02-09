@@ -10,6 +10,7 @@ pub enum ConfigError {
     Yaml(serde_yaml::Error),
     MissingTargets { path: String },
     InvalidTarget { target: String },
+    MissingPrecompiledField { field: &'static str },
 }
 
 impl std::fmt::Display for ConfigError {
@@ -23,6 +24,9 @@ impl std::fmt::Display for ConfigError {
             ConfigError::InvalidTarget { target } => {
                 write!(f, "invalid build target '{}'", target)
             }
+            ConfigError::MissingPrecompiledField { field } => {
+                write!(f, "precompiled_binaries missing required field '{}'", field)
+            }
         }
     }
 }
@@ -34,6 +38,8 @@ impl std::error::Error for ConfigError {}
 struct LibforgeConfig {
     #[serde(default)]
     build: BuildConfig,
+    #[serde(default)]
+    precompiled_binaries: Option<PrecompiledBinariesConfig>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -52,10 +58,25 @@ struct ToolchainConfig {
     channel: Option<String>,
 }
 
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+struct PrecompiledBinariesConfig {
+    repository: Option<String>,
+    url_prefix: Option<String>,
+    public_key: Option<String>,
+}
+
 #[derive(Debug, Default)]
 pub struct ToolchainSettings {
     pub channel: Option<String>,
     pub targets: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PrecompiledSettings {
+    pub repository: String,
+    pub url_prefix: String,
+    pub public_key: String,
 }
 
 pub fn build_targets(manifest_dir: &Path) -> Result<Vec<String>, ConfigError> {
@@ -106,6 +127,41 @@ pub fn toolchain_settings(manifest_dir: &Path) -> Result<ToolchainSettings, Conf
         channel: config.build.toolchain.channel,
         targets,
     })
+}
+
+pub fn precompiled_settings(
+    manifest_dir: &Path,
+) -> Result<Option<PrecompiledSettings>, ConfigError> {
+    let (_path, contents) = match read_optional_config(manifest_dir)? {
+        Some(value) => value,
+        None => return Ok(None),
+    };
+    let config: LibforgeConfig = serde_yaml::from_str(&contents).map_err(ConfigError::Yaml)?;
+    let precompiled = match config.precompiled_binaries {
+        Some(value) => value,
+        None => return Ok(None),
+    };
+    let repository = precompiled
+        .repository
+        .ok_or(ConfigError::MissingPrecompiledField {
+            field: "repository",
+        })?;
+    let public_key = precompiled
+        .public_key
+        .ok_or(ConfigError::MissingPrecompiledField {
+            field: "public_key",
+        })?;
+    let url_prefix = precompiled.url_prefix.unwrap_or_else(|| {
+        format!(
+            "https://github.com/{}/releases/download/",
+            repository
+        )
+    });
+    Ok(Some(PrecompiledSettings {
+        repository,
+        url_prefix,
+        public_key,
+    }))
 }
 
 fn read_optional_config(manifest_dir: &Path) -> Result<Option<(String, String)>, ConfigError> {

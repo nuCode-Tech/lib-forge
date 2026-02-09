@@ -15,18 +15,6 @@ impl ArchiveKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ChecksumKind {
-    Sha256,
-}
-
-impl ChecksumKind {
-    pub fn extension(self) -> &'static str {
-        match self {
-            ChecksumKind::Sha256 => "sha256",
-        }
-    }
-}
 
 pub fn artifact_name(
     lib_name: &str,
@@ -46,9 +34,6 @@ pub fn artifact_name(
     ))
 }
 
-pub fn checksum_name(artifact_name: &str, checksum: ChecksumKind) -> String {
-    format!("{}.{}", artifact_name, checksum.extension())
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArtifactNameError {
@@ -132,18 +117,6 @@ mod tests {
         let key = PlatformKey::LinuxX86_64;
         let name = artifact_name("libname", "b1-abc123", &key, ArchiveKind::TarGz).expect("name");
         assert_eq!(name, "libname-b1-abc123-x86_64-unknown-linux-gnu.tar.gz");
-    }
-
-    #[test]
-    fn checksum_name_appends_extension() {
-        let checksum = checksum_name(
-            "libname-build-1-x86_64-unknown-linux-gnu.tar.gz",
-            ChecksumKind::Sha256,
-        );
-        assert_eq!(
-            checksum,
-            "libname-build-1-x86_64-unknown-linux-gnu.tar.gz.sha256"
-        );
     }
 
     #[test]

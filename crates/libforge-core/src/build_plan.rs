@@ -42,7 +42,6 @@ pub struct BuiltArtifact {
     pub library_path: String,
     pub include_dir: Option<String>,
     pub manifest_path: String,
-    pub checksums_path: String,
     pub build_id_path: String,
 }
 

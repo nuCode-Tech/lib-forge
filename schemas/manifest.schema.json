@@ -27,6 +27,9 @@
     },
     "platforms": {
       "$ref": "#/$defs/platforms"
+    },
+    "signing": {
+      "$ref": "#/$defs/signing"
     }
   },
   "$defs": {
@@ -107,18 +110,11 @@
     },
     "artifacts": {
       "type": "object",
-      "description": "Naming and checksum metadata for every generated artifact.",
+      "description": "Naming metadata for every generated artifact.",
       "required": ["naming"],
       "properties": {
         "naming": {
           "$ref": "#/$defs/artifactNaming"
-        },
-        "checksums": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": []
         }
       },
       "additionalProperties": true
@@ -211,11 +207,15 @@
     },
     "platform": {
       "type": "object",
-      "required": ["name"],
+      "required": ["name", "buildId"],
       "properties": {
         "name": {
           "type": "string",
           "description": "Rust target triple (for example, x86_64-unknown-linux-gnu)."
+        },
+        "buildId": {
+          "type": "string",
+          "description": "Per-target ABI identity hash."
         },
         "triples": {
           "type": "array",
@@ -239,6 +239,23 @@
           "default": []
         },
         "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "signing": {
+      "type": "object",
+      "description": "Optional manifest signing metadata.",
+      "required": ["algorithm", "publicKey", "signature"],
+      "properties": {
+        "algorithm": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "signature": {
           "type": "string"
         }
       },

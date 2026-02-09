@@ -5,5 +5,6 @@ pub mod build_plan;
 pub mod config;
 pub mod manifest;
 pub mod platform;
+pub mod security;
 pub mod toolchain;
 pub mod util;

@@ -3,7 +3,6 @@ use std::collections::HashSet;
 use crate::platform::PlatformKey;
 
 pub const MANIFEST_FILE_NAME: &str = "manifest.json";
-pub const CHECKSUMS_FILE_NAME: &str = "checksums.txt";
 pub const BUILD_ID_FILE_NAME: &str = "build_id.txt";
 pub const METADATA_DIR_NAME: &str = "metadata";
 pub const LIB_DIR_NAME: &str = "lib";
@@ -13,7 +12,6 @@ pub const INCLUDE_DIR_NAME: &str = "include";
 pub struct ArchiveLayout {
     pub layout: LayoutVariant,
     pub manifest_path: String,
-    pub checksums_path: String,
     pub build_id_path: String,
     pub library_path: String,
     pub include_path: Option<String>,
@@ -24,7 +22,6 @@ pub fn archive_layout(lib_name: &str, platform_key: &PlatformKey) -> ArchiveLayo
     ArchiveLayout {
         layout,
         manifest_path: metadata_path(MANIFEST_FILE_NAME),
-        checksums_path: metadata_path(CHECKSUMS_FILE_NAME),
         build_id_path: metadata_path(BUILD_ID_FILE_NAME),
         library_path: format!(
             "{}/{}",
@@ -97,7 +94,6 @@ fn is_windows(platform_key: &PlatformKey) -> bool {
 pub fn required_entries(layout: &ArchiveLayout) -> Vec<String> {
     let mut entries = vec![
         layout.manifest_path.clone(),
-        layout.checksums_path.clone(),
         layout.build_id_path.clone(),
         layout.library_path.clone(),
     ];
@@ -159,7 +155,6 @@ mod tests {
         let layout = archive_layout("demo", &key);
         assert_eq!(layout.library_path, "lib/libdemo.so");
         assert_eq!(layout.manifest_path, "metadata/manifest.json");
-        assert_eq!(layout.checksums_path, "metadata/checksums.txt");
         assert_eq!(layout.build_id_path, "metadata/build_id.txt");
     }
 
@@ -176,7 +171,6 @@ mod tests {
         let layout = archive_layout("demo", &key);
         let entries = vec![
             "metadata/manifest.json",
-            "metadata/checksums.txt",
             "metadata/build_id.txt",
             "lib/libdemo.so",
         ];
