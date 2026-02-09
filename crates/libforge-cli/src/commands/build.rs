@@ -36,18 +36,16 @@ pub struct BuildOutcome {
 pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
     let manifest_dir = args.manifest_dir;
     let targets = resolve_targets(&manifest_dir, args.target)?;
-    let toolchain_settings = config::toolchain_settings(&manifest_dir).map_err(|err| err.to_string())?;
+    let toolchain_settings =
+        config::toolchain_settings(&manifest_dir).map_err(|err| err.to_string())?;
 
     let (package_name, _package_version) = package_metadata(&manifest_dir)?;
     let first_target = targets
         .first()
         .ok_or_else(|| "no build targets configured".to_string())?;
-    let build_inputs = BuildInputs::from_manifest_dir(
-        &manifest_dir,
-        AbiInput::new(first_target.clone()),
-        None,
-    )
-    .map_err(|err| format!("failed to read build inputs: {}", err))?;
+    let build_inputs =
+        BuildInputs::from_manifest_dir(&manifest_dir, AbiInput::new(first_target.clone()), None)
+            .map_err(|err| format!("failed to read build inputs: {}", err))?;
     let build_id = hash_release_inputs(&build_inputs)
         .map_err(|err| format!("failed to hash release inputs: {}", err))?;
 
@@ -69,10 +67,7 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
             return Err(format!("unsupported target '{}'", target));
         }
         let platform = rust_targets[0];
-        let target_dir = manifest_dir
-            .join("target")
-            .join(target)
-            .join(&args.profile);
+        let target_dir = manifest_dir.join("target").join(target).join(&args.profile);
         let library_name = library_filename(&package_name, &platform);
         let library_path = target_dir.join(&library_name);
         let artifact_name = format!(
@@ -94,13 +89,19 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
                 .join("libforge-manifest.json")
                 .to_string_lossy()
                 .into_owned(),
-            build_id_path: manifest_dir.join("build_id.txt").to_string_lossy().into_owned(),
+            build_id_path: manifest_dir
+                .join("build_id.txt")
+                .to_string_lossy()
+                .into_owned(),
         };
         target_plans.push(BuildTargetPlan {
             platform,
             rust_target_triple: target.clone(),
             working_dir: manifest_dir.to_string_lossy().into_owned(),
-            cargo_manifest_path: manifest_dir.join("Cargo.toml").to_string_lossy().into_owned(),
+            cargo_manifest_path: manifest_dir
+                .join("Cargo.toml")
+                .to_string_lossy()
+                .into_owned(),
             cargo_args: vec![],
             cargo_features: vec![],
             cross_image: args.cross_image.clone(),
@@ -119,21 +120,15 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
     match args.executor {
         BuildExecutorKind::Cargo => {
             let executor = CargoExecutor::new();
-            executor
-                .execute(&plan)
-                .map_err(|err| err.to_string())?;
+            executor.execute(&plan).map_err(|err| err.to_string())?;
         }
         BuildExecutorKind::Cross => {
             let executor = CrossExecutor::new();
-            executor
-                .execute(&plan)
-                .map_err(|err| err.to_string())?;
+            executor.execute(&plan).map_err(|err| err.to_string())?;
         }
         BuildExecutorKind::Zigbuild => {
             let executor = ZigbuildExecutor::new();
-            executor
-                .execute(&plan)
-                .map_err(|err| err.to_string())?;
+            executor.execute(&plan).map_err(|err| err.to_string())?;
         }
     }
 
