@@ -4,11 +4,9 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use libforge_core::{
-    artifact::naming::{artifact_name, checksum_name, ArchiveKind, ChecksumKind},
-    bindings::{BindingMetadata, BindingMetadataSet, DartBinding},
-    build_id::{hash_build_inputs, AbiInput, BuildInputs},
+    artifact::naming::{artifact_name, ArchiveKind},
+    build_id::{hash_build_inputs, release_hash, AbiInput, BuildInputs},
     config,
-    manifest::schema::SCHEMA_VERSION,
     platform::PlatformKey,
 };
 
@@ -51,13 +49,6 @@ fn integration_flow_from_config_to_artifact_identity() {
     const LIB_NAME: &str = "integration-demo";
     write_cargo_files(&dir, LIB_NAME);
 
-    let binding_metadata = BindingMetadataSet {
-        bindings: vec![BindingMetadata::Dart(DartBinding {
-            sdk_constraint: ">=3.0".to_string(),
-            ffi_abi: "1".to_string(),
-        })],
-    };
-
     let targets = config::build_targets(&dir).expect("build targets");
     let expected = vec![
         "x86_64-unknown-linux-gnu".to_string(),
@@ -77,11 +68,11 @@ fn integration_flow_from_config_to_artifact_identity() {
             &dir,
             AbiInput::new(target.clone()),
             None,
-            AbiInput::new(binding_metadata.clone()),
-            AbiInput::new(SCHEMA_VERSION.to_string()),
         )
         .expect("build inputs");
         let build_id = hash_build_inputs(&inputs).expect("hash build inputs");
+        let release_hash = release_hash(&build_id);
+        assert_eq!(release_hash, build_id);
         assert!(build_id.starts_with("b1-"));
         let artifact =
             artifact_name(LIB_NAME, &build_id, &platform, ArchiveKind::TarGz).expect("artifact");
@@ -89,7 +80,5 @@ fn integration_flow_from_config_to_artifact_identity() {
         assert!(artifact.contains(&build_id));
         assert!(artifact.contains(platform.as_str()));
         assert!(artifact.ends_with(".tar.gz"));
-        let checksum = checksum_name(&artifact, ChecksumKind::Sha256);
-        assert!(checksum.ends_with(".sha256"));
     }
 }

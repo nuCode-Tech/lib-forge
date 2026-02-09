@@ -23,10 +23,9 @@ LibForge tooling honors a per-project `libforge.yaml` so consumers can choose wh
   - read the manifest
   - select the correct platform
   - download the required artifacts
-  - verify checksums
   - place files
 
-Adapters never compute hashes, infer compatibility, or invent logic.
+Adapters never compute hashes, infer compatibility, or invent logic. Releases are keyed by the LibForge `build_id`, which acts as the canonical release hash.
 
 ---
 
@@ -71,7 +70,6 @@ Language adapters live outside the Rust workspace and consume published releases
    - native binaries
    - packaged artifacts (zip, tar, xcframework, aar)
    - `libforge-manifest.json`
-   - checksums
 5. Language adapters fetch binaries from that release.
 
 ---

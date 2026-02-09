@@ -7,10 +7,8 @@ use std::time::SystemTime;
 use libforge_build::{cargo::CargoExecutor, BuildExecutor};
 use libforge_core::{
     artifact::naming::{artifact_name, ArchiveKind},
-    bindings::BindingMetadataSet,
-    build_id::{hash_build_inputs, AbiInput, BuildInputs},
+    build_id::{hash_build_inputs, release_hash, AbiInput, BuildInputs},
     build_plan::{BuildPlan, BuildProfile, BuildTargetPlan, BuiltArtifact},
-    manifest::schema::SCHEMA_VERSION,
     platform::PlatformKey,
     toolchain::Toolchain,
 };
@@ -101,17 +99,15 @@ fn full_flow_executes_core_plan_and_build_executor() {
 
     let toolchain = Toolchain::from_manifest_dir(&dir).expect("toolchain settings");
 
-    let binding_metadata = BindingMetadataSet { bindings: vec![] };
-
     let inputs = BuildInputs::from_manifest_dir(
         &dir,
         AbiInput::new(target.clone()),
         None,
-        AbiInput::new(binding_metadata.clone()),
-        AbiInput::new(SCHEMA_VERSION.to_string()),
     )
     .expect("build inputs");
     let build_id = hash_build_inputs(&inputs).expect("hash build inputs");
+    let release_hash = release_hash(&build_id);
+    assert_eq!(release_hash, build_id);
 
     let keys = PlatformKey::from_rust_target(&target);
     assert_eq!(keys.len(), 1);
@@ -159,7 +155,6 @@ fn full_flow_executes_core_plan_and_build_executor() {
                     .join("libforge-manifest.json")
                     .to_string_lossy()
                     .into_owned(),
-                checksums_path: dir.join("checksums.txt").to_string_lossy().into_owned(),
                 build_id_path: dir.join("build-id.txt").to_string_lossy().into_owned(),
             },
         }],
