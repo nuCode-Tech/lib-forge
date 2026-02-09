@@ -4,3 +4,12 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 license = "Apache-2.0"
+
+[dependencies]
+flate2 = "1.1.9"
+libforge-core = { path = "../libforge-core" }
+sha2 = "0.10.9"
+tar = "0.4.44"
+tempfile = "3.24.0"
+walkdir = "2.5.0"
+zip = "7.3.0"
