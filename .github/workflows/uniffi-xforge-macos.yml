@@ -17,6 +17,8 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -27,6 +29,8 @@ jobs:
           cargo run -p libforge-cli -- build \
             --manifest-dir examples/uniffi-xforge \
             --profile release
+          ls -la target/aarch64-apple-darwin/release || true
+          ls -la target/aarch64-apple-darwin/release/libuniffi_xforge.dylib
           cargo run -p libforge-cli -- bundle \
             --manifest-dir examples/uniffi-xforge \
             --output-dir examples/uniffi-xforge/dist \
