@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.libforge.dev/manifest/v1/manifest.schema.json",
+  "title": "LibForge Manifest v1",
+  "description": "Schema for libforge.manifest.v1 that governs build identity, artifact naming, platform resolution, and binding compatibility.",
+  "type": "object",
+  "required": ["schemaVersion", "package", "build", "artifacts", "bindings", "platforms"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "libforge.manifest.v1",
+      "default": "libforge.manifest.v1",
+      "description": "Identifies the schema version that produced this manifest."
+    },
+    "package": {
+      "$ref": "#/$defs/package"
+    },
+    "build": {
+      "$ref": "#/$defs/build"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    },
+    "bindings": {
+      "$ref": "#/$defs/bindings"
+    },
+    "platforms": {
+      "$ref": "#/$defs/platforms"
+    },
+    "signing": {
+      "$ref": "#/$defs/signing"
+    }
+  },
+  "$defs": {
+    "package": {
+      "type": "object",
+      "description": "Identifies the published artifact.",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "repository": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "build": {
+      "type": "object",
+      "description": "Build provenance that ties a manifest back to a deterministic invocation.",
+      "required": ["id", "identity"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/buildIdentity"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "engine": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "buildIdentity": {
+      "type": "object",
+      "description": "The host, toolchain, and configuration used for the build.",
+      "required": ["host", "toolchain"],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "toolchain": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Naming metadata for every generated artifact.",
+      "required": ["naming"],
+      "properties": {
+        "naming": {
+          "$ref": "#/$defs/artifactNaming"
+        }
+      },
+      "additionalProperties": true
+    },
+    "artifactNaming": {
+      "type": "object",
+      "description": "Template plus flags that describe how artifact filenames are constructed.",
+      "required": ["template"],
+      "properties": {
+        "template": {
+          "type": "string",
+          "description": "Must include at least `{package.name}` and `{package.version}`."
+        },
+        "delimiter": {
+          "type": "string",
+          "default": "-"
+        },
+        "includePlatform": {
+          "type": "boolean",
+          "default": true
+        },
+        "includeBinding": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "bindings": {
+      "type": "object",
+      "description": "Documents each binding that tooling can package.",
+      "required": ["catalog"],
+      "properties": {
+        "primary": {
+          "type": "string"
+        },
+        "catalog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "binding": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": true
+    },
+    "platforms": {
+      "type": "object",
+      "description": "Platform resolutions that tooling must honor.",
+      "required": ["default", "targets"],
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Rust target triple (for example, x86_64-unknown-linux-gnu)."
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/platform"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "platform": {
+      "type": "object",
+      "required": ["name", "buildId"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Rust target triple (for example, x86_64-unknown-linux-gnu)."
+        },
+        "buildId": {
+          "type": "string",
+          "description": "Per-target ABI identity hash."
+        },
+        "triples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "signing": {
+      "type": "object",
+      "description": "Optional manifest signing metadata.",
+      "required": ["algorithm", "publicKey", "signature"],
+      "properties": {
+        "algorithm": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

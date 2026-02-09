@@ -11,7 +11,11 @@ Build native binaries once, publish them once, and reuse them everywhere. All in
 lib-forge provides:
 
 - Deterministic, content-addressed native builds (ABI-stable identity)
-- Cross-platform Rust compilation (desktop, Android, Apple, etc.)
+- Cross-platform Rust compilation (linux, windows, Android, Apple, etc.)
+
+## Configuring Targets
+
+LibForge tooling honors a per-project `libforge.yaml` so consumers can choose which targets are built by default. See [docs/configuring-targets.md](docs/configuring-targets.md) for the expected schema, how the values map back to the canonical `PlatformKey` registry in `crates/libforge-core/src/platform/key.rs`, and examples.
 - Standardized artifact naming and archive layouts
 - A single manifest describing all binaries in a release
 - GitHub Releases publishing
@@ -54,7 +58,7 @@ Language adapters live outside the Rust workspace and consume published releases
 ## Typical workflow
 
 1. Author a Rust crate (usually with UniFFI)
-2. Add `libforge.toml`
+2. Add `libforge.yaml`
 3. Run:
 
    ```
@@ -74,11 +78,20 @@ Language adapters live outside the Rust workspace and consume published releases
 
 ## Supported platforms (initial)
 
-- macOS (x86_64, arm64)
-- Linux (glibc)
-- Windows (msvc)
-- Android (armeabi-v7a, arm64-v8a, x86_64)
-- iOS / iOS Simulator (via xcframework)
+Target triples for `libforge.yaml`:
+
+- `armv7-linux-androideabi`
+- `aarch64-linux-android`
+- `x86_64-linux-android`
+- `aarch64-apple-ios`
+- `aarch64-apple-ios-sim`
+- `x86_64-apple-ios`
+- `aarch64-pc-windows-msvc`
+- `x86_64-pc-windows-msvc`
+- `aarch64-unknown-linux-gnu`
+- `x86_64-unknown-linux-gnu`
+- `aarch64-apple-darwin`
+- `x86_64-apple-darwin`
 
 ---
 

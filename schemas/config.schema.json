@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.libforge.dev/config/v1/config.schema.json",
+  "title": "LibForge Config v1",
+  "type": "object",
+  "properties": {
+    "build": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "toolchain": {
+          "type": "object",
+          "properties": {
+            "channel": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "precompiled_binaries": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string" },
+        "url_prefix": { "type": "string" },
+        "public_key": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

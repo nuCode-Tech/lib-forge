@@ -1,3 +1,5 @@
 target/
 cargo.lock
 **/target/
+.gradle/
+gradle.lockfile
