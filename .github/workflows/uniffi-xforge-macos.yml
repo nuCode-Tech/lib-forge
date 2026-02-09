@@ -24,6 +24,11 @@ jobs:
         run: rustup target add aarch64-apple-darwin
       - name: Bundle artifacts (macOS)
         run: |
+          cargo run -p libforge-cli -- build \
+            --manifest-dir examples/uniffi-xforge \
+            --profile release
+      - name: Bundle artifacts (macOS)
+        run: |
           cargo run -p libforge-cli -- bundle \
             --manifest-dir examples/uniffi-xforge \
             --output-dir examples/uniffi-xforge/dist \
