@@ -1,0 +1,39 @@
+name: Uniffi XForge (macOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish release assets (requires secrets)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  bundle:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Add target
+        run: rustup target add aarch64-apple-darwin
+      - name: Bundle artifacts (macOS)
+        run: |
+          cargo run -p libforge-cli -- bundle \
+            --manifest-dir examples/uniffi-xforge \
+            --output-dir examples/uniffi-xforge/dist \
+            --profile release
+      - name: Publish release
+        if: ${{ inputs.publish == 'true' }}
+        env:
+          LIBFORGE_PRIVATE_KEY: ${{ secrets.LIBFORGE_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cargo run -p libforge-cli -- publish \
+            --manifest examples/uniffi-xforge/dist/libforge-manifest.json \
+            --assets-dir examples/uniffi-xforge/dist

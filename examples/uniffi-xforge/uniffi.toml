@@ -1,0 +1,3 @@
+[bindings.dart]
+cdylib_name = "uniffi_xforge_ffi"
+package_name = "uniffi_xforge"
