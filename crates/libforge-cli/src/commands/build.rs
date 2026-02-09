@@ -61,13 +61,14 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
     };
 
     let mut target_plans = Vec::new();
+    let target_root = resolve_target_root(&manifest_dir);
     for target in &targets {
         let rust_targets = PlatformKey::from_rust_target(target);
         if rust_targets.len() != 1 {
             return Err(format!("unsupported target '{}'", target));
         }
         let platform = rust_targets[0];
-        let target_dir = manifest_dir.join("target").join(target).join(&args.profile);
+        let target_dir = target_root.join("target").join(target).join(&args.profile);
         let library_name = library_filename(&package_name, &platform);
         let library_path = target_dir.join(&library_name);
         let artifact_name = format!(
@@ -104,7 +105,7 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
             cross_image: args.cross_image.clone(),
             env: vec![libforge_core::build_plan::BuildEnvVar {
                 key: "CARGO_TARGET_DIR".to_string(),
-                value: manifest_dir.join("target").to_string_lossy().into_owned(),
+                value: target_root.join("target").to_string_lossy().into_owned(),
             }],
             artifact: built_artifact,
         });
@@ -155,4 +156,15 @@ pub(crate) fn resolve_targets(
         return Err("no build targets configured".to_string());
     }
     Ok(targets)
+}
+
+fn resolve_target_root(manifest_dir: &Path) -> PathBuf {
+    let mut current = Some(manifest_dir);
+    while let Some(dir) = current {
+        if dir.join("Cargo.lock").exists() {
+            return dir.to_path_buf();
+        }
+        current = dir.parent();
+    }
+    manifest_dir.to_path_buf()
 }

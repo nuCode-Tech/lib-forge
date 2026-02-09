@@ -33,6 +33,7 @@ pub fn archive_layout(lib_name: &str, platform_key: &PlatformKey) -> ArchiveLayo
 }
 
 pub fn library_filename(lib_name: &str, platform_key: &PlatformKey) -> String {
+    let lib_name = lib_name.replace('-', "_");
     if is_windows(platform_key) {
         return format!("{}.dll", lib_name);
     }

@@ -120,11 +120,15 @@ pub fn run(args: BundleArgs) -> Result<BundleOutcome, String> {
         let archive_kind = default_archive_kind(&platform);
         let archive_name =
             artifact_name(&package_name, &build_id, &platform, archive_kind).map_err(|err| err.to_string())?;
-        let library_path = manifest_dir
+        let target_root = resolve_target_root(&manifest_dir);
+        let library_path = target_root
             .join("target")
             .join(target)
             .join(&args.profile)
-            .join(libforge_core::artifact::layout::library_filename(&package_name, &platform));
+            .join(libforge_core::artifact::layout::library_filename(
+                &package_name,
+                &platform,
+            ));
         if !library_path.exists() {
             return Err(format!(
                 "library not found at '{}'; run libforge build first",
@@ -196,6 +200,17 @@ pub fn run(args: BundleArgs) -> Result<BundleOutcome, String> {
         manifest_path,
         archive_paths,
     })
+}
+
+fn resolve_target_root(manifest_dir: &Path) -> PathBuf {
+    let mut current = Some(manifest_dir);
+    while let Some(dir) = current {
+        if dir.join("Cargo.lock").exists() {
+            return dir.to_path_buf();
+        }
+        current = dir.parent();
+    }
+    manifest_dir.to_path_buf()
 }
 
 pub fn package_metadata(manifest_dir: &Path) -> Result<(String, String), String> {
