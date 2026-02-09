@@ -3,3 +3,5 @@ cargo.lock
 **/target/
 .gradle/
 gradle.lockfile
+examples/uniffi-xforge/dart/.dart_tool/
+adapters/dart/.dart_tool/
