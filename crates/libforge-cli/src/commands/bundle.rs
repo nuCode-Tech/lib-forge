@@ -103,6 +103,11 @@ pub fn run(args: BundleArgs) -> Result<BundleOutcome, String> {
     };
     let mut manifest = manifest;
 
+    let manifest_contents = libforge_core::manifest::serialize_manifest_pretty(&manifest)
+        .map_err(|err| err.to_string())?;
+    fs::write(&manifest_path, manifest_contents)
+        .map_err(|err| format!("failed to write manifest: {}", err))?;
+
     for target in &targets {
         let rust_targets = PlatformKey::from_rust_target(target);
         if rust_targets.len() != 1 {
