@@ -95,17 +95,18 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
                 .to_string_lossy()
                 .into_owned(),
         };
+        let target_dir_arg = target_root.join("target").to_string_lossy().into_owned();
         target_plans.push(BuildTargetPlan {
             platform,
             rust_target_triple: target.clone(),
             working_dir: manifest_dir.to_string_lossy().into_owned(),
             cargo_manifest_path: "Cargo.toml".to_string(),
-            cargo_args: vec![],
+            cargo_args: vec!["--target-dir".to_string(), target_dir_arg.clone()],
             cargo_features: vec![],
             cross_image: args.cross_image.clone(),
             env: vec![libforge_core::build_plan::BuildEnvVar {
                 key: "CARGO_TARGET_DIR".to_string(),
-                value: target_root.join("target").to_string_lossy().into_owned(),
+                value: target_dir_arg,
             }],
             artifact: built_artifact,
         });
