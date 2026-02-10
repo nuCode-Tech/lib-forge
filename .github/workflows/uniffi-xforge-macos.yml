@@ -17,6 +17,8 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -24,10 +26,9 @@ jobs:
         run: rustup target add aarch64-apple-darwin
       - name: Build library (macOS)
         run: |
-          cargo run -p libforge-cli -- build \
-            --manifest-dir examples/uniffi-xforge \
-            --target aarch64-apple-darwin \
-            --profile release
+          cargo build --release \
+            --manifest-path examples/uniffi-xforge/Cargo.toml \
+            --target aarch64-apple-darwin
       - name: Bundle artifacts (macOS)
         run: |
           cargo run -p libforge-cli -- bundle \
