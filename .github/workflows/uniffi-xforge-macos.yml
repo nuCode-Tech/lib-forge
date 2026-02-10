@@ -31,6 +31,11 @@ jobs:
             --manifest-dir examples/uniffi-xforge \
             --target aarch64-apple-darwin \
             --profile release
+      - name: Cargo build (macOS)
+        run: |
+          cargo build --release \
+            --manifest-path examples/uniffi-xforge/Cargo.toml \
+            --target aarch64-apple-darwin
       - name: Verify build output
         run: |
           ls -la target || true
