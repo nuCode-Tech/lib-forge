@@ -24,15 +24,24 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Add target
         run: rustup target add aarch64-apple-darwin
-      - name: Build + bundle artifacts (macOS)
+      - name: Build library (macOS)
         run: |
+          echo "CARGO_TARGET_DIR=$CARGO_TARGET_DIR"
           cargo run -p libforge-cli -- build \
             --manifest-dir examples/uniffi-xforge \
+            --target aarch64-apple-darwin \
             --profile release
+      - name: Verify build output
+        run: |
+          ls -la target || true
+          ls -la target/release || true
           ls -la target/aarch64-apple-darwin/release || true
-          ls -la target/aarch64-apple-darwin/release/libuniffi_xforge.dylib
+          find target -maxdepth 5 -name "libuniffi_xforge.dylib" -print || true
+      - name: Bundle artifacts (macOS)
+        run: |
           cargo run -p libforge-cli -- bundle \
             --manifest-dir examples/uniffi-xforge \
+            --target aarch64-apple-darwin \
             --output-dir examples/uniffi-xforge/dist \
             --profile release
       - name: Publish release
