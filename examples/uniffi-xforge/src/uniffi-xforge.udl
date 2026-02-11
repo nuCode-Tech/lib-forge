@@ -1,3 +1,0 @@
-namespace uniffi_xforge {
-  string ping(string name);
-};

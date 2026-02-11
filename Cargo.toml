@@ -6,5 +6,4 @@ members = [
     "crates/libforge-pack",
     "crates/libforge-publish",
     "crates/libforge-cli",
-    "examples/uniffi-xforge",
 ]
