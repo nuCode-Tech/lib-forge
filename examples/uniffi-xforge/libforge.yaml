@@ -1,9 +1,0 @@
-precompiled_binaries:
-  repository: nuCode-Tech/lib-forge
-  public_key: "6a753fe723cc4e79ae32a0239807295e4b90c6b2f6d96b5956822deadecef52c"
-  mode: auto
-build:
-  targets:
-    - aarch64-apple-darwin
-  toolchain:
-    channel: stable

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -213,8 +213,7 @@ fn run_cli() -> Result<(), String> {
                         .parent()
                         .map(|path| path.to_path_buf())
                         .unwrap_or_else(|| PathBuf::from("."));
-                    let settings = libforge_core::config::precompiled_settings(&manifest_dir)
-                        .map_err(|err| err.to_string())?
+                    let settings = resolve_precompiled_settings(&manifest_dir)?
                         .ok_or_else(|| "missing precompiled_binaries.repository in libforge.yaml".to_string())?;
                     settings.repository
                 }
@@ -243,6 +242,21 @@ fn run_cli() -> Result<(), String> {
             Ok(())
         }
     }
+}
+
+fn resolve_precompiled_settings(
+    manifest_dir: &Path,
+) -> Result<Option<libforge_core::config::PrecompiledSettings>, String> {
+    let mut current = Some(manifest_dir);
+    while let Some(dir) = current {
+        let settings = libforge_core::config::precompiled_settings(dir)
+            .map_err(|err| err.to_string())?;
+        if settings.is_some() {
+            return Ok(settings);
+        }
+        current = dir.parent();
+    }
+    Ok(None)
 }
 
 fn exit_with_error(message: &str) -> Result<(), String> {
