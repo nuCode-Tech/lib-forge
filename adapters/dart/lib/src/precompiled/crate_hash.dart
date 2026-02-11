@@ -8,7 +8,7 @@ const _hashVersion = 'b1';
 
 Future<String> computeReleaseHash({required String crateDir}) async {
   final cargoToml = await _readRequired(crateDir, 'Cargo.toml');
-  final cargoLock = await _readRequired(crateDir, 'Cargo.lock');
+  final cargoLock = await _readCargoLock(crateDir);
   final libforgeYaml = await _readOptional(crateDir, 'libforge.yaml');
 
   final canonical = canonicalJsonWithoutTarget(
@@ -59,6 +59,25 @@ Future<String> _readRequired(String crateDir, String fileName) async {
     throw FileSystemException('Missing required file: $fileName', file.path);
   }
   return file.readAsString();
+}
+
+Future<String> _readCargoLock(String crateDir) async {
+  var dir = Directory(crateDir);
+  while (true) {
+    final candidate = File(path.join(dir.path, 'Cargo.lock'));
+    if (candidate.existsSync()) {
+      return candidate.readAsString();
+    }
+    final parent = dir.parent;
+    if (parent.path == dir.path) {
+      break;
+    }
+    dir = parent;
+  }
+  throw FileSystemException(
+    'Missing required file: Cargo.lock',
+    path.join(crateDir, 'Cargo.lock'),
+  );
 }
 
 Future<String?> _readOptional(String crateDir, String fileName) async {
