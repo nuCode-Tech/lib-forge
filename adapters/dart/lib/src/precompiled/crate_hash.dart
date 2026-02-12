@@ -9,11 +9,13 @@ const _hashVersion = 'b1';
 Future<String> computeReleaseHash({required String crateDir}) async {
   final cargoToml = await _readRequired(crateDir, 'Cargo.toml');
   final cargoLock = await _readRequiredCargoLock(crateDir);
+  final rustToolchain = await _readRequiredRustToolchain(crateDir);
   final xforgeYaml = await _readOptional(crateDir, 'xforge.yaml');
 
   final canonical = canonicalJsonWithoutTarget(
     cargoToml: cargoToml,
     cargoLock: cargoLock,
+    rustToolchain: rustToolchain,
     xforgeYaml: xforgeYaml,
     uniffiUdl: null,
   );
@@ -24,6 +26,7 @@ Future<String> computeReleaseHash({required String crateDir}) async {
 String canonicalJsonWithoutTarget({
   required String cargoToml,
   required String cargoLock,
+  required String rustToolchain,
   String? xforgeYaml,
   String? uniffiUdl,
 }) {
@@ -32,6 +35,7 @@ String canonicalJsonWithoutTarget({
     _field('cargo.lock', cargoLock),
     _field('rust.target_triple', null),
     _field('uniffi.udl', uniffiUdl),
+    _field('rust-toolchain.toml', rustToolchain),
     _field('xforge.yaml', xforgeYaml),
   ];
 
@@ -77,6 +81,33 @@ Future<String> _readRequiredCargoLock(String crateDir) async {
   throw FileSystemException(
     'Missing required file: Cargo.lock',
     path.join(crateDir, 'Cargo.lock'),
+  );
+}
+
+Future<String> _readRequiredRustToolchain(String crateDir) async {
+  final direct = File(path.join(crateDir, 'rust-toolchain.toml'));
+  if (direct.existsSync()) {
+    return direct.readAsString();
+  }
+  var current = path.normalize(crateDir);
+  while (true) {
+    final lock = File(path.join(current, 'Cargo.lock'));
+    if (lock.existsSync()) {
+      final toolchain = File(path.join(current, 'rust-toolchain.toml'));
+      if (toolchain.existsSync()) {
+        return toolchain.readAsString();
+      }
+      break;
+    }
+    final parent = path.dirname(current);
+    if (parent == current) {
+      break;
+    }
+    current = parent;
+  }
+  throw FileSystemException(
+    'Missing required file: rust-toolchain.toml',
+    path.join(crateDir, 'rust-toolchain.toml'),
   );
 }
 

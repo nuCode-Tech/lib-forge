@@ -54,6 +54,7 @@ pub fn run(args: BuildArgs) -> Result<BuildOutcome, String> {
         toolchain: Toolchain {
             channel: toolchain_settings.channel.clone(),
             targets: toolchain_settings.targets.clone(),
+            components: toolchain_settings.components.clone(),
         },
         cargo_args: vec![],
         rustflags: vec![],

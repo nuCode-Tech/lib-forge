@@ -37,14 +37,12 @@ fn write_cargo_files(manifest_dir: &Path, package_name: &str) {
 #[test]
 fn integration_flow_from_config_to_artifact_identity() {
     let dir = temp_dir("full-flow");
-    let config_contents = r#"build:
-  targets:
-    - x86_64-unknown-linux-gnu
-    - aarch64-apple-darwin
-  toolchain:
-    channel: nightly
+    let config_contents = r#"[toolchain]
+channel = "nightly"
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin"]
+components = ["rustfmt", "clippy"]
 "#;
-    fs::write(dir.join("xforge.yaml"), config_contents).expect("write config");
+    fs::write(dir.join("rust-toolchain.toml"), config_contents).expect("write config");
 
     const LIB_NAME: &str = "integration-demo";
     write_cargo_files(&dir, LIB_NAME);
@@ -59,6 +57,7 @@ fn integration_flow_from_config_to_artifact_identity() {
     let settings = config::toolchain_settings(&dir).expect("toolchain settings");
     assert_eq!(settings.channel.as_deref(), Some("nightly"));
     assert_eq!(settings.targets, expected);
+    assert_eq!(settings.components, vec!["rustfmt".to_string(), "clippy".to_string()]);
 
     for target in expected {
         let keys = PlatformKey::from_rust_target(&target);

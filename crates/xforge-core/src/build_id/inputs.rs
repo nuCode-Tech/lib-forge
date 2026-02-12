@@ -17,8 +17,11 @@ pub struct BuildInputs {
     /// ABI-affecting: UniFFI UDL.
     /// This defines the FFI surface for bindings.
     pub uniffi: Option<AbiInput<UniFfiInput>>,
+    /// ABI-affecting: rust-toolchain.toml config.
+    /// This captures channel/target/component selection.
+    pub rust_toolchain: AbiInput<NormalizedRustToolchain>,
     /// ABI-affecting: xforge.yaml config.
-    /// This captures build target selection and precompiled binary metadata.
+    /// This captures precompiled binary metadata.
     pub xforge_yaml: Option<AbiInput<NormalizedXforgeConfig>>,
 }
 
@@ -32,6 +35,8 @@ impl BuildInputs {
         let xforge_yaml_path = manifest_dir.join("xforge.yaml");
         let cargo_toml = std::fs::read_to_string(cargo_toml_path)?;
         let cargo_lock = read_cargo_lock(manifest_dir)?;
+        let rust_toolchain =
+            AbiInput::new(NormalizedRustToolchain(read_rust_toolchain(manifest_dir)?));
         let xforge_yaml = read_optional_file(&xforge_yaml_path)?
             .map(|contents| AbiInput::new(NormalizedXforgeConfig(contents)));
         Ok(Self {
@@ -39,6 +44,7 @@ impl BuildInputs {
             cargo_lock: AbiInput::new(CargoLockfile(cargo_lock)),
             rust_target_triple,
             uniffi,
+            rust_toolchain,
             xforge_yaml,
         })
     }
@@ -65,6 +71,10 @@ impl BuildInputs {
                     .and_then(|value| value.value.udl.as_ref())
                     .map(|value| BuildInputValue::Present(value.0.clone()))
                     .unwrap_or(BuildInputValue::Absent),
+            ),
+            BuildInputField::abi(
+                "rust-toolchain.toml",
+                BuildInputValue::Present(self.rust_toolchain.value.0.clone()),
             ),
             BuildInputField::abi(
                 "xforge.yaml",
@@ -121,6 +131,10 @@ pub struct CargoLockfile(pub String);
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NormalizedUdl(pub String);
 
+/// Normalized rust-toolchain.toml contents.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NormalizedRustToolchain(pub String);
+
 /// Normalized xforge.yaml contents.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NormalizedXforgeConfig(pub String);
@@ -156,6 +170,34 @@ fn read_optional_file(path: &std::path::Path) -> std::io::Result<Option<String>>
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(error),
     }
+}
+
+fn read_rust_toolchain(manifest_dir: &std::path::Path) -> std::io::Result<String> {
+    let direct = manifest_dir.join("rust-toolchain.toml");
+    if direct.exists() {
+        return std::fs::read_to_string(&direct);
+    }
+    let repo_root = find_repo_root(manifest_dir);
+    let root_path = repo_root.join("rust-toolchain.toml");
+    if root_path.exists() {
+        return std::fs::read_to_string(&root_path);
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "rust-toolchain.toml not found in manifest dir or repo root",
+    ))
+}
+
+fn find_repo_root(manifest_dir: &std::path::Path) -> std::path::PathBuf {
+    let mut current = Some(manifest_dir);
+    while let Some(dir) = current {
+        let lock_path = dir.join("Cargo.lock");
+        if lock_path.exists() {
+            return dir.to_path_buf();
+        }
+        current = dir.parent();
+    }
+    manifest_dir.to_path_buf()
 }
 
 fn read_cargo_lock(manifest_dir: &std::path::Path) -> std::io::Result<String> {

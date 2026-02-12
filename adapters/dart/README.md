@@ -6,8 +6,8 @@
 
 Use `PrecompiledBuilder` to prefer signed artifacts and fall back to a local build only when the release is missing or invalid. The builder:
 
-- Loads `xforge.yaml` (the same file the CLI reads) to find `precompiled_binaries.repository`, `public_key`, `url_prefix`, and `mode`.
-- Computes the deterministic `build_id` with `crate_hash.dart`, so it will download the exact manifest name that `xforge bundle` generated.
+- Loads `xforge.yaml` to find `precompiled_binaries.repository`, `public_key`, `url_prefix`, and `mode`.
+- Computes the deterministic `build_id` with `crate_hash.dart` (including `rust-toolchain.toml`), so it will download the exact manifest name that `xforge bundle` generated.
 - Downloads `xforge-manifest.json` plus the chosen platform archive, verifies both with the ED25519 `public_key`, caches them under `.dart_tool/xforge`, and extracts the shared library into the Dart app's code assets.
 - Adds the extracted library as a `CodeAsset` for the current package, routing it through the `assetName` you supplied, and respects the `linkMode` preference from `code_assets`.
 - Calls your provided `fallback` builder when mode is `never`, when verification fails, or when Rust is available and the builder decides to fall back.
@@ -30,7 +30,7 @@ The builder honors `precompiled_binaries.mode`: `auto` prefers downloaded binari
 `xforge_dart` ships with a CLI (`dart run xforge_dart validate-precompiled`) that mirrors the runtime behavior. It:
 
 1. Reads `xforge.yaml` to fetch the same `public_key`/`url_prefix`.
-2. Computes `build_id` (with `crate_hash.dart`) unless `--build-id` is supplied.
+2. Computes `build_id` (with `crate_hash.dart`, including `rust-toolchain.toml`) unless `--build-id` is supplied.
 3. Detects the host triple unless `--target` is supplied.
 4. Downloads and verifies the manifest plus the single artifact for that target.
 
@@ -74,9 +74,13 @@ precompiled_binaries:
   public_key: "${public_key_hex}"
   url_prefix: "https://github.com/owner/repo/releases/download/"
   mode: auto
-build:
-  targets:
-    - x86_64-unknown-linux-gnu
+```
+
+```toml
+[toolchain]
+channel = "stable"
+targets = ["x86_64-unknown-linux-gnu"]
+components = ["rustfmt", "clippy"]
 ```
 
 - `repository` and `public_key` are required.

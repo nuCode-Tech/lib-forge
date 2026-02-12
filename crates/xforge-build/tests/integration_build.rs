@@ -56,8 +56,12 @@ fn init_sample_crate(manifest_dir: &Path, name: &str, target: &str) {
         "pub fn hello() -> &'static str { \"world\" }\n",
     )
     .expect("write lib.rs");
-    let config = format!("build:\n  targets:\n    - {}\n", target);
-    fs::write(manifest_dir.join("xforge.yaml"), config).expect("write xforge.yaml");
+    let toolchain = format!(
+        "[toolchain]\nchannel = \"stable\"\ntargets = [\"{}\"]\ncomponents = [\"rustfmt\", \"clippy\"]\n",
+        target
+    );
+    fs::write(manifest_dir.join("rust-toolchain.toml"), toolchain)
+        .expect("write rust-toolchain.toml");
     fs::write(
         manifest_dir.join("Cargo.lock"),
         format!("[[package]]\nname = \"{}\"\nversion = \"0.1.0\"\n", name),

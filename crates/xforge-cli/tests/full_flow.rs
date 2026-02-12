@@ -61,10 +61,13 @@ fn init_sample_crate(manifest_dir: &Path, name: &str, target: &str) {
     )
     .expect("write Cargo.lock");
     fs::write(
-        manifest_dir.join("xforge.yaml"),
-        format!("build:\n  targets:\n    - {}\n", target),
+        manifest_dir.join("rust-toolchain.toml"),
+        format!(
+            "[toolchain]\nchannel = \"stable\"\ntargets = [\"{}\"]\ncomponents = [\"rustfmt\", \"clippy\"]\n",
+            target
+        ),
     )
-    .expect("write xforge.yaml");
+    .expect("write rust-toolchain.toml");
 }
 
 fn target_release_dir(manifest_dir: &Path, target: &str) -> PathBuf {

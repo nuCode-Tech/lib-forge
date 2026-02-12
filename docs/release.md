@@ -5,7 +5,7 @@ XForge produces signed manifests, deterministic build hashes, and platform artif
 ## How adapters resolve a binary
 
 1. **Read `xforge.yaml`.** The adapter expects a `precompiled_binaries` block (see below). Missing this block means the adapter skips the precompiled route.
-2. **Compute the `build_id`.** Every adapter uses the same hash as the CLI (Cargo.toml, Cargo.lock, xforge.yaml, `.udl` inputs). The Dart adapter ships with `crate_hash.dart` to replicate the CLI hashing logic.
+2. **Compute the `build_id`.** Every adapter uses the same hash as the CLI (Cargo.toml, Cargo.lock, rust-toolchain.toml, xforge.yaml, `.udl` inputs). The Dart adapter ships with `crate_hash.dart` to replicate the CLI hashing logic.
 3. **Download the manifest.** Adapters fetch `xforge-manifest.json` and its `.sig` from the configured release URL and verify the signature using the `public_key` from `xforge.yaml`.
 4. **Match the platform.** The manifest lists `platforms.targets` entries; adapters match their host triple (e.g., `aarch64-apple-darwin`) to a platform with artifacts.
 5. **Download the artifact.** The first artifact listed for the matched platform is downloaded along with its `.sig` and verified with the same `public_key`.
@@ -21,9 +21,9 @@ XForge produces signed manifests, deterministic build hashes, and platform artif
 
 ## Release checklist
 
-### 1. Configure `xforge.yaml`
+### 1. Configure `xforge.yaml` and `rust-toolchain.toml`
 
-Add a `precompiled_binaries` block next to `Cargo.toml`.
+Add a `precompiled_binaries` block next to `Cargo.toml` and ensure `rust-toolchain.toml` declares the targets/components.
 
 ```yaml
 precompiled_binaries:
@@ -31,21 +31,24 @@ precompiled_binaries:
   public_key: "<public_key_hex>"
   url_prefix: "https://github.com/owner/repo/releases/download/"
   mode: auto
-build:
-  targets:
-    - x86_64-unknown-linux-gnu
-    - aarch64-apple-darwin
+```
+
+```toml
+[toolchain]
+channel = "stable"
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin"]
+components = ["rustfmt", "clippy"]
 ```
 
 - `repository` is required and normalized to `owner/repo` (GitHub/GitHub-compatible hosts).
 - `public_key` is the 32-byte hex string produced by `xforge keygen`.
 - `url_prefix` overrides the GitHub download path when you host artifacts elsewhere.
 - `mode` controls adapter fallbacks (`auto`, `always`/`download`, `never`/`build`/`off`).
-- `build.targets` tells the CLI which Rust triples to build. See `docs/configuring-targets.md` for the full schema and valid triples.
+- `toolchain.targets` tells the CLI which Rust triples to build. See `docs/configuring-targets.md` for the full schema and valid triples.
 
 ### 2. Build each target
 
-Run `xforge build --target <triple>` (or `cargo build --target`, `cross build`, etc.) for each platform listed in `build.targets`. `xforge build` prints `build_id` and the shared-library path for the target it just built. The next step assumes the artifacts exist under `target/<triple>/<profile>`.
+Run `xforge build --target <triple>` (or `cargo build --target`, `cross build`, etc.) for each platform listed in `toolchain.targets`. `xforge build` prints `build_id` and the shared-library path for the target it just built. The next step assumes the artifacts exist under `target/<triple>/<profile>`.
 
 ### 3. Bundle artifacts and manifest
 

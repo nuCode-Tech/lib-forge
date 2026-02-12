@@ -6,6 +6,7 @@ use crate::config::{toolchain_settings, ConfigError};
 pub struct Toolchain {
     pub channel: Option<String>,
     pub targets: Vec<String>,
+    pub components: Vec<String>,
 }
 
 impl Toolchain {
@@ -14,6 +15,7 @@ impl Toolchain {
         Ok(Self {
             channel: settings.channel,
             targets: settings.targets,
+            components: settings.components,
         })
     }
 }

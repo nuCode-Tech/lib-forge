@@ -11,7 +11,7 @@
 ## CLI reference
 
 - `xforge keygen` — produce a new Ed25519 pair (`public_key` for manifests, `private_key` for publishing).
-- `xforge build [--target <triple>] [--profile <name>] [--executor cargo|cross|zigbuild] [--cross-image <image>]` — compile a single target; defaults to the first entry in `xforge.yaml` or the canonical registry when the file is missing. Prints `build_id` and the built library path.
+- `xforge build [--target <triple>] [--profile <name>] [--executor cargo|cross|zigbuild] [--cross-image <image>]` — compile a single target; defaults to the first entry in `rust-toolchain.toml`. Prints `build_id` and the built library path.
 - `xforge bundle [--target <triple>] [--profile release] [--output-dir dist]` — package the existing build output for every configured target, write `xforge-manifest.json`, and emit `build_id.txt`. It assumes the appropriate libraries already exist under `target/<triple>/<profile>`. The manifest and archives live in `--output-dir` (defaults to `dist`).
 - `xforge sign --file <path> [--out <path>]` — sign any file with `XFORGE_PRIVATE_KEY` and save a `.sig` sibling.
 - `xforge verify --file <path> --signature <path> --public-key <hex>` — verify a signature against a public key; use `--public-key-file` to read the key from disk.
@@ -31,19 +31,19 @@ x-forge/
 
 ## Configuration & schemas
 
-`xforge.yaml` sits beside `Cargo.toml` and declares `build.targets`, optional `build.toolchain`, and the `precompiled_binaries` block that adapters consume. See `docs/configuring-targets.md` for the schema-driven guidance and `schemas/config.schema.json` for the authoritative JSON schema. The manifest emitted by `xforge bundle` conforms to `schemas/manifest.schema.json`, so adapters can download artifacts with confidence.
+`rust-toolchain.toml` declares the Rust channel, targets, and components that XForge uses when building. `xforge.yaml` sits beside `Cargo.toml` and only declares the `precompiled_binaries` block that adapters consume. See `docs/configuring-targets.md` for the schema-driven guidance and `schemas/config.schema.json` for the authoritative JSON schema. The manifest emitted by `xforge bundle` conforms to `schemas/manifest.schema.json`, so adapters can download artifacts with confidence.
 
 ## Language adapters
 
-- `adapters/dart` (`xforge_dart`) — runtime builder + CLI for Flutter/Dart consumers. It exposes `PrecompiledBuilder` for `code_assets`, downloads signed artifacts by reading `xforge.yaml`, computes the same `build_id` as the CLI, verifies every manifest/artifact signature, and falls back to a local build depending on `precompiled_binaries.mode`. The companion CLI (`dart run xforge_dart validate-precompiled [--crate-dir …] [--build-id …] [--target …]`) confirms a release can be downloaded and verified.
+- `adapters/dart` (`xforge_dart`) — runtime builder + CLI for Flutter/Dart consumers. It exposes `PrecompiledBuilder` for `code_assets`, downloads signed artifacts by reading `xforge.yaml`, computes the same `build_id` as the CLI (including `rust-toolchain.toml`), verifies every manifest/artifact signature, and falls back to a local build depending on `precompiled_binaries.mode`. The companion CLI (`dart run xforge_dart validate-precompiled [--crate-dir …] [--build-id …] [--target …]`) confirms a release can be downloaded and verified.
 - `adapters/gradle`, `adapters/swift`, `adapters/python` — directories are reserved for future Kotlin/Gradle, Swift (SPM/CocoaPods), and Python adapters; they currently contain stubs.
 
 ## Additional docs
 
-- `docs/configuring-targets.md` — how `xforge.yaml` expresses targets, toolchain choices, and the `precompiled_binaries` settings adapters rely on.
+- `docs/configuring-targets.md` — how `rust-toolchain.toml` expresses targets, toolchain choices, and the `precompiled_binaries` settings adapters rely on.
 - `docs/release.md` — step-by-step release flow (build, bundle, publish, sign) plus publishing quirks and sample automation snippets.
 
 ## Schemas
 
-- `schemas/config.schema.json` — validates `xforge.yaml` (build targets, toolchain channel, precompiled repository/public_key).
+- `schemas/config.schema.json` — validates `xforge.yaml` (precompiled repository/public_key).
 - `schemas/manifest.schema.json` — validates the manifest published with each release (package info, build identity, artifacts, platforms, signing block).

@@ -85,11 +85,19 @@ fn end_to_end_publish_github_if_configured() {
     fs::write(
         dir.join("xforge.yaml"),
         format!(
-            "build:\n  targets:\n    - {}\nprecompiled_binaries:\n  repository: {}\n  public_key: deadbeef\n",
-            target, repo
+            "precompiled_binaries:\n  repository: {}\n  public_key: deadbeef\n",
+            repo
         ),
     )
     .expect("write xforge.yaml");
+    fs::write(
+        dir.join("rust-toolchain.toml"),
+        format!(
+            "[toolchain]\nchannel = \"stable\"\ntargets = [\"{}\"]\ncomponents = [\"rustfmt\", \"clippy\"]\n",
+            target
+        ),
+    )
+    .expect("write rust-toolchain.toml");
 
     let _build_outcome = build::run(build::BuildArgs {
         manifest_dir: dir.clone(),

@@ -4,24 +4,6 @@
   "title": "XForge Config v1",
   "type": "object",
   "properties": {
-    "build": {
-      "type": "object",
-      "properties": {
-        "targets": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": []
-        },
-        "toolchain": {
-          "type": "object",
-          "properties": {
-            "channel": { "type": "string" }
-          },
-          "additionalProperties": true
-        }
-      },
-      "additionalProperties": true
-    },
     "precompiled_binaries": {
       "type": "object",
       "properties": {

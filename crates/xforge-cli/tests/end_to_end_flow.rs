@@ -61,12 +61,17 @@ fn end_to_end_build_bundle_publish_local() {
     let target = host_target_triple();
     fs::write(
         dir.join("xforge.yaml"),
+        "precompiled_binaries:\n  repository: local/demo\n  public_key: deadbeef\n",
+    )
+    .expect("write xforge.yaml");
+    fs::write(
+        dir.join("rust-toolchain.toml"),
         format!(
-            "build:\n  targets:\n    - {}\nprecompiled_binaries:\n  repository: local/demo\n  public_key: deadbeef\n",
+            "[toolchain]\nchannel = \"stable\"\ntargets = [\"{}\"]\ncomponents = [\"rustfmt\", \"clippy\"]\n",
             target
         ),
     )
-    .expect("write xforge.yaml");
+    .expect("write rust-toolchain.toml");
 
     let build_outcome = build::run(build::BuildArgs {
         manifest_dir: dir.clone(),

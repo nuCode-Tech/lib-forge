@@ -88,8 +88,8 @@ pub fn hash_release_inputs(inputs: &BuildInputs) -> serde_json::Result<String> {
 mod tests {
     use super::*;
     use crate::build_id::{
-        AbiInput, CargoLockfile, NormalizedCargoToml, NormalizedXforgeConfig, NormalizedUdl,
-        UniFfiInput,
+        AbiInput, CargoLockfile, NormalizedCargoToml, NormalizedRustToolchain,
+        NormalizedXforgeConfig, NormalizedUdl, UniFfiInput,
     };
 
     fn sample_inputs() -> BuildInputs {
@@ -106,8 +106,11 @@ mod tests {
                     "namespace demo; interface Demo { string ping(); };".to_string(),
                 )),
             })),
+            rust_toolchain: AbiInput::new(NormalizedRustToolchain(
+                "[toolchain]\nchannel = \"stable\"\ntargets = [\"aarch64-apple-darwin\"]\ncomponents = [\"rustfmt\"]\n".to_string(),
+            )),
             xforge_yaml: Some(AbiInput::new(NormalizedXforgeConfig(
-                "build:\n  targets:\n    - linux\nprecompiled_binaries:\n  url_prefix: https://github.com/nuCode-Tech/x-forge/releases/download/precompiled_\n  public_key: demo-public-key\n".to_string(),
+                "precompiled_binaries:\n  repository: demo/repo\n  public_key: demo-public-key\n".to_string(),
             ))),
         }
     }
@@ -130,9 +133,8 @@ mod tests {
     #[test]
     fn hash_changes_on_abi_input() {
         let mut inputs = sample_inputs();
-        if let Some(xforge_yaml) = &mut inputs.xforge_yaml {
-            xforge_yaml.value.0 = "build:\n  targets:\n    - windows\n".to_string();
-        }
+        inputs.rust_toolchain.value.0 =
+            "[toolchain]\nchannel = \"nightly\"\ntargets = [\"x86_64-unknown-linux-gnu\"]\ncomponents = [\"clippy\"]\n".to_string();
         let hash = hash_build_inputs(&inputs).expect("hash should succeed");
         let original = hash_build_inputs(&sample_inputs()).expect("hash should succeed");
         assert_ne!(hash, original);

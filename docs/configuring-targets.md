@@ -1,29 +1,30 @@
 # Configuring Target Platforms
 
-XForge reads `xforge.yaml` next to `Cargo.toml` to decide which targets to build, how to name artifacts, and how adapters should find released binaries. The canonical registry of supported triples lives inside `crates/xforge-core/src/platform/key.rs`; every triple you list must match one of the `PlatformKey::as_str()` values defined there.
+XForge reads `rust-toolchain.toml` to decide which targets to build, which channel to use, and which components to install. The canonical registry of supported triples lives inside `crates/xforge-core/src/platform/key.rs`; every triple you list must match one of the `PlatformKey::as_str()` values defined there.
 
-## Declare defaults in `xforge.yaml`
+## Declare defaults in `rust-toolchain.toml`
 
-Create a `xforge.yaml` with a `build.targets` list so `xforge build` and `xforge bundle` know what to build/package. The CLI will iterate through this list, hash each target's inputs, and include the triples in the manifest.
+Create a `rust-toolchain.toml` with a `[toolchain]` section so `xforge build` and `xforge bundle` know what to build/package. The CLI will iterate through this list, hash each target's inputs, and include the triples in the manifest.
 
-```yaml
-build:
-  targets:
-    - x86_64-unknown-linux-gnu
-    - aarch64-linux-android
-    - aarch64-apple-darwin
-    - x86_64-pc-windows-msvc
-  toolchain:
-    channel: stable
+```toml
+[toolchain]
+channel = "stable"
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-linux-android",
+  "aarch64-apple-darwin",
+  "x86_64-pc-windows-msvc",
+]
+components = ["rustfmt", "clippy"]
 ```
 
-- `build.targets` is required when `xforge.yaml` exists; the CLI rejects invalid or unsupported target triples (see `PlatformKey` for the authoritative list).
+- `toolchain.targets` is required; the CLI rejects invalid or unsupported target triples (see `PlatformKey` for the authoritative list).
 - `xforge build` picks the first entry as its default target unless you override it with `--target`, so keep the list ordered by your primary consumer.
 - `xforge bundle` packages every listed target by reading the already-built libraries under `target/<triple>/<profile>`; run `xforge build` (or `cargo build`/`cross build`) for each triple before bundling.
 
 ## Toolchain settings
 
-`build.toolchain.channel` is optional and makes the CLI spin up that Rust toolchain channel when invoking Cargo/Cross/Zigbuild. Omitting it leaves the channel unspecified so Cargo uses whatever `rustup default` already provides. `xforge build` also reads `build.toolchain.targets` when preparing the `CARGO_TARGET_DIR`, but the CLI enforces the same `build.targets` list you declared.
+`toolchain.channel` and `toolchain.components` are required so the CLI can reproduce the same rustup configuration across builds. `xforge build` and `xforge bundle` always use the `toolchain.targets` list you declare.
 
 ## Precompiled binaries block
 
@@ -45,6 +46,6 @@ precompiled_binaries:
 
 See `docs/release.md` for the full release flow (bundle, sign, publish) that relies on this configuration.
 
-## Defaults when `xforge.yaml` is missing or incomplete
+## Missing `rust-toolchain.toml`
 
-If you do not check in a `xforge.yaml`, tooling gracefully falls back to the full set of supported triples (`PlatformKey::registry`). This lets you try `xforge bundle` or `xforge build` before stabilizing your `xforge.yaml`. However, as soon as you add the file, you must define `build.targets`, otherwise the CLI refuses to run.
+`xforge build` and `xforge bundle` require a `rust-toolchain.toml` in the crate directory or repo root. If the file is missing or the required fields are absent, the CLI exits with a configuration error.

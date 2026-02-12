@@ -18,7 +18,7 @@ enum Command {
         /// Manifest directory containing Cargo.toml.
         #[arg(long, default_value = ".")]
         manifest_dir: PathBuf,
-        /// Target triple (overrides xforge.yaml).
+        /// Target triple (overrides rust-toolchain.toml).
         #[arg(long)]
         target: Option<String>,
         /// Cargo profile (default: release).
@@ -39,7 +39,7 @@ enum Command {
         /// Output directory for artifacts.
         #[arg(long, default_value = "dist")]
         output_dir: PathBuf,
-        /// Target triple (overrides xforge.yaml).
+        /// Target triple (overrides rust-toolchain.toml).
         #[arg(long)]
         target: Option<String>,
         /// Cargo profile (default: release).
