@@ -89,25 +89,25 @@ class PrecompiledBinariesConfig {
   }
 }
 
-class LibforgeOptions {
-  LibforgeOptions({required this.precompiledBinaries});
+class XforgeOptions {
+  XforgeOptions({required this.precompiledBinaries});
 
   final PrecompiledBinariesConfig? precompiledBinaries;
 
-  static LibforgeOptions load({required String crateDir}) {
-    final file = File(path.join(crateDir, 'libforge.yaml'));
+  static XforgeOptions load({required String crateDir}) {
+    final file = File(path.join(crateDir, 'xforge.yaml'));
     if (!file.existsSync()) {
-      return LibforgeOptions(precompiledBinaries: null);
+      return XforgeOptions(precompiledBinaries: null);
     }
     final root = loadYamlNode(file.readAsStringSync(), sourceUrl: file.uri);
     if (root is! YamlMap) {
-      throw FormatException('libforge.yaml must be a map');
+      throw FormatException('xforge.yaml must be a map');
     }
     final node = root.nodes['precompiled_binaries'];
     if (node == null) {
-      return LibforgeOptions(precompiledBinaries: null);
+      return XforgeOptions(precompiledBinaries: null);
     }
-    return LibforgeOptions(precompiledBinaries: PrecompiledBinariesConfig.parse(node));
+    return XforgeOptions(precompiledBinaries: PrecompiledBinariesConfig.parse(node));
   }
 }
 

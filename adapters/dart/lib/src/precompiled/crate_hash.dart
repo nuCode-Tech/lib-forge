@@ -9,12 +9,12 @@ const _hashVersion = 'b1';
 Future<String> computeReleaseHash({required String crateDir}) async {
   final cargoToml = await _readRequired(crateDir, 'Cargo.toml');
   final cargoLock = await _readRequiredCargoLock(crateDir);
-  final libforgeYaml = await _readOptional(crateDir, 'libforge.yaml');
+  final xforgeYaml = await _readOptional(crateDir, 'xforge.yaml');
 
   final canonical = canonicalJsonWithoutTarget(
     cargoToml: cargoToml,
     cargoLock: cargoLock,
-    libforgeYaml: libforgeYaml,
+    xforgeYaml: xforgeYaml,
     uniffiUdl: null,
   );
   final digest = sha256.convert(utf8.encode(canonical));
@@ -24,7 +24,7 @@ Future<String> computeReleaseHash({required String crateDir}) async {
 String canonicalJsonWithoutTarget({
   required String cargoToml,
   required String cargoLock,
-  String? libforgeYaml,
+  String? xforgeYaml,
   String? uniffiUdl,
 }) {
   final fields = <Map<String, dynamic>>[
@@ -32,7 +32,7 @@ String canonicalJsonWithoutTarget({
     _field('cargo.lock', cargoLock),
     _field('rust.target_triple', null),
     _field('uniffi.udl', uniffiUdl),
-    _field('libforge.yaml', libforgeYaml),
+    _field('xforge.yaml', xforgeYaml),
   ];
 
   fields.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));

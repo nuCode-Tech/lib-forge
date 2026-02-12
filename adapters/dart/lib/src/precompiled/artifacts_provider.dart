@@ -6,7 +6,7 @@ import 'package:path/path.dart' as path;
 import 'options.dart';
 import 'util.dart';
 
-const _manifestFileName = 'libforge-manifest.json';
+const _manifestFileName = 'xforge-manifest.json';
 
 class ManifestPlatform {
   ManifestPlatform({
@@ -22,8 +22,8 @@ class ManifestPlatform {
   bool matchesTarget(String target) => name == target || triples.contains(target);
 }
 
-class LibforgeManifest {
-  LibforgeManifest({required this.platforms});
+class XforgeManifest {
+  XforgeManifest({required this.platforms});
 
   final List<ManifestPlatform> platforms;
 }
@@ -93,7 +93,7 @@ class PrecompiledArtifactsProvider {
   final PrecompiledBinariesConfig config;
 
   Directory get _cacheRoot =>
-      Directory(path.join(crateDir, '.dart_tool', 'libforge'));
+      Directory(path.join(crateDir, '.dart_tool', 'xforge'));
 
   Directory _manifestCacheDir(String buildId) =>
       Directory(path.join(_cacheRoot.path, 'manifests', buildId));
@@ -101,7 +101,7 @@ class PrecompiledArtifactsProvider {
   Directory _artifactCacheDir(String buildId) =>
       Directory(path.join(_cacheRoot.path, 'artifacts', buildId));
 
-  Future<LibforgeManifest> fetchVerifiedManifest({
+  Future<XforgeManifest> fetchVerifiedManifest({
     required String buildId,
   }) async {
     final manifestDir = _manifestCacheDir(buildId);
@@ -134,7 +134,7 @@ class PrecompiledArtifactsProvider {
   }
 
   ArtifactSelection selectArtifact({
-    required LibforgeManifest manifest,
+    required XforgeManifest manifest,
     required String target,
   }) {
     final platform = manifest.platforms.firstWhere(
@@ -237,7 +237,7 @@ class PrecompiledArtifactsProvider {
   }
 }
 
-LibforgeManifest _parseManifest(String jsonString) {
+XforgeManifest _parseManifest(String jsonString) {
   final raw = jsonDecode(jsonString);
   if (raw is! Map<String, dynamic>) {
     throw FormatException('Manifest must be a JSON object.');
@@ -267,7 +267,7 @@ LibforgeManifest _parseManifest(String jsonString) {
       ManifestPlatform(name: name, triples: triples, artifacts: artifacts),
     );
   }
-  return LibforgeManifest(platforms: platforms);
+  return XforgeManifest(platforms: platforms);
 }
 
 List<String> _stringListOrEmpty(Object? raw) {

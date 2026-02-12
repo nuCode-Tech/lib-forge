@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schema.libforge.dev/config/v1/config.schema.json",
-  "title": "LibForge Config v1",
+  "$id": "https://schema.xforge.dev/config/v1/config.schema.json",
+  "title": "XForge Config v1",
   "type": "object",
   "properties": {
     "build": {

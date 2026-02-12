@@ -1,0 +1,12 @@
+[package]
+name = "xforge-publish"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "Apache-2.0"
+
+[dependencies]
+xforge-core = { path = "../xforge-core" }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

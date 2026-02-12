@@ -1,7 +1,7 @@
-name: libforge_dart
-description: Dart adapter for LibForge precompiled artifacts.
+name: xforge_dart
+description: Dart adapter for XForge precompiled artifacts.
 version: 0.1.0
-homepage: https://github.com/stax/lib-forge
+homepage: https://github.com/nuCode-Tech/x-forge
 environment:
   sdk: ">=3.3.0 <4.0.0"
 dependencies:

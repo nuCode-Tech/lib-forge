@@ -22,10 +22,10 @@ Future<int> runValidatePrecompiled(List<String> args) async {
   }
 
   final crateDir = parsed.crateDir ?? Directory.current.path;
-  final options = LibforgeOptions.load(crateDir: crateDir);
+  final options = XforgeOptions.load(crateDir: crateDir);
   final config = options.precompiledBinaries;
   if (config == null) {
-    stderr.writeln('libforge.yaml is missing precompiled_binaries config.');
+    stderr.writeln('xforge.yaml is missing precompiled_binaries config.');
     return 2;
   }
 
@@ -127,7 +127,7 @@ String _valueOrThrow(List<String> args, int index, String flag) {
 }
 
 void _printUsage() {
-  stdout.writeln('Usage: dart run libforge_dart validate-precompiled [options]');
+  stdout.writeln('Usage: dart run xforge_dart validate-precompiled [options]');
   stdout.writeln('Options:');
   stdout.writeln('  --crate-dir <path>   Crate directory (default: cwd)');
   stdout.writeln('  --build-id <id>      Build id override');
