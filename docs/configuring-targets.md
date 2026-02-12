@@ -1,10 +1,10 @@
 # Configuring Target Platforms
 
-LibForge Core ships with canonical Rust target triples in `crates/libforge-core/src/platform/key.rs`. The `PlatformKey::as_str()` values are those triples, and they are the values you list in your per-project `libforge.yaml`. Adapters and CLI commands consult this configuration file to determine which targets to build when no flags are provided.
+LibForge reads `libforge.yaml` next to `Cargo.toml` to decide which targets to build, how to name artifacts, and how adapters should find released binaries. The canonical registry of supported triples lives inside `crates/libforge-core/src/platform/key.rs`; every triple you list must match one of the `PlatformKey::as_str()` values defined there.
 
 ## Declare defaults in `libforge.yaml`
 
-Create a `libforge.yaml` at the root of your repository to declare the platform targets and other defaults that matter to your project:
+Create a `libforge.yaml` with a `build.targets` list so `libforge build` and `libforge bundle` know what to build/package. The CLI will iterate through this list, hash each target's inputs, and include the triples in the manifest.
 
 ```yaml
 build:
@@ -17,15 +17,34 @@ build:
     channel: stable
 ```
 
-When LibForge tooling boots, it reads `build.targets` and uses the listed target triples to:
+- `build.targets` is required when `libforge.yaml` exists; the CLI rejects invalid or unsupported target triples (see `PlatformKey` for the authoritative list).
+- `libforge build` picks the first entry as its default target unless you override it with `--target`, so keep the list ordered by your primary consumer.
+- `libforge bundle` packages every listed target by reading the already-built libraries under `target/<triple>/<profile>`; run `libforge build` (or `cargo build`/`cross build`) for each triple before bundling.
 
-- populate the manifest’s `platforms.targets` list,
-- determine which adapters/artifacts to invoke,
-- choose the default `target` when the user omits one,
-- resolve toolchain target triples from the same list (single source of truth).
+## Toolchain settings
 
-Each entry must match a supported Rust target triple (for example, `x86_64-unknown-linux-gnu`, `aarch64-apple-darwin`, `aarch64-apple-ios-sim`, `x86_64-pc-windows-msvc`). The `PlatformKey` enum in `crates/libforge-core/src/platform/key.rs` is the authoritative list of supported strings, so use that file as your source of truth when adding or removing keys.
+`build.toolchain.channel` is optional and makes the CLI spin up that Rust toolchain channel when invoking Cargo/Cross/Zigbuild. Omitting it leaves the channel unspecified so Cargo uses whatever `rustup default` already provides. `libforge build` also reads `build.toolchain.targets` when preparing the `CARGO_TARGET_DIR`, but the CLI enforces the same `build.targets` list you declared.
 
-`build.toolchain.channel` is optional and pins the Rust toolchain channel used by build executors. It is read from the same `libforge.yaml` so no separate toolchain file is required.
+## Precompiled binaries block
 
-If a project omits `libforge.yaml`, tooling falls back to the canonical registry defined by `PlatformKey`, meaning every supported key remains available until you explicitly prune the list. Extending the registry requires touching `crates/libforge-core/src/platform`.
+Adapters and language-specific builders read the `precompiled_binaries` block to know where to download signed artifacts and which public key should verify them.
+
+```yaml
+precompiled_binaries:
+  repository: owner/repo
+  public_key: "<public_key_hex>"
+  url_prefix: "https://github.com/owner/repo/releases/download/"
+  mode: auto
+```
+
+- `repository` is required and is normalized to `owner/repo` (GitHub or GitHub-compatible hosts).
+- `public_key` must be the 32-byte hex string produced by `libforge keygen` and is used both when signing a manifest in `libforge publish` and when adapters verify it.
+- `url_prefix` overrides the default GitHub download URL when you host artifacts elsewhere.
+- `mode` controls what happens when precompiled binaries cannot be found: `auto` prefers downloads but falls back to building locally, `always` treats missing/invalid binaries as an error, and `never` forces a local build. Additional aliases (`download`→`always`, `build`/`off`/`disabled`→`never`) are accepted.
+- The CLI also consults this block to infer the repository when you omit `--repository` from `libforge publish`.
+
+See `docs/release.md` for the full release flow (bundle, sign, publish) that relies on this configuration.
+
+## Defaults when `libforge.yaml` is missing or incomplete
+
+If you do not check in a `libforge.yaml`, tooling gracefully falls back to the full set of supported triples (`PlatformKey::registry`). This lets you try `libforge bundle` or `libforge build` before stabilizing your `libforge.yaml`. However, as soon as you add the file, you must define `build.targets`, otherwise the CLI refuses to run.
