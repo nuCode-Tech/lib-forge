@@ -10,4 +10,5 @@ adapters/dart/.dart_tool/
 adapters/dart/pubspec.lock
 examples/uniffi-xforge/dart/.dart_tool/
 examples/uniffi-xforge/dist/
+.DS_Store
 
