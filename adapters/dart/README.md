@@ -45,6 +45,25 @@ dart run libforge_dart validate-precompiled \
 
 The CLI returns `0` on success, `1` if verification fails, and `2` on argument/configuration errors. Set `LIBFORGE_DART_PRECOMPILED_VERBOSE=1` to emit debug logs.
 
+## CLI: keygen
+
+Generate a new Ed25519 keypair in the same format as `libforge keygen`:
+
+```bash
+dart run libforge_dart keygen
+```
+
+This prints:
+
+- `public_key=<32-byte hex>`
+- `private_key=<64-byte hex (seed + public)>`
+
+You can also run the standalone executable form:
+
+```bash
+dart run libforge_dart:keygen
+```
+
 ## Configuration
 
 `PrecompiledBuilder` and the CLI respect the `precompiled_binaries` block you declare in `libforge.yaml`:
@@ -67,6 +86,5 @@ build:
 ## Caching and logging
 
 Downloaded manifests, artifacts, and extracted libraries live under `.dart_tool/libforge`. Signatures are verified with `ed25519_edwards`, and HTTP downloads are retried with exponential backoff (`httpGetWithRetry`). Verbose logging can be enabled with `LIBFORGE_DART_PRECOMPILED_VERBOSE=1`.
-
 
 
