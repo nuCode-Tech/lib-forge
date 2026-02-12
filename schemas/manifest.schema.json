@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schema.libforge.dev/manifest/v1/manifest.schema.json",
-  "title": "LibForge Manifest v1",
-  "description": "Schema for libforge.manifest.v1 that governs build identity, artifact naming, platform resolution, and binding compatibility.",
+  "$id": "https://schema.xforge.dev/manifest/v1/manifest.schema.json",
+  "title": "XForge Manifest v1",
+  "description": "Schema for xforge.manifest.v1 that governs build identity, artifact naming, platform resolution, and binding compatibility.",
   "type": "object",
   "required": ["schemaVersion", "package", "build", "artifacts", "bindings", "platforms"],
   "additionalProperties": true,
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "const": "libforge.manifest.v1",
-      "default": "libforge.manifest.v1",
+      "const": "xforge.manifest.v1",
+      "default": "xforge.manifest.v1",
       "description": "Identifies the schema version that produced this manifest."
     },
     "package": {

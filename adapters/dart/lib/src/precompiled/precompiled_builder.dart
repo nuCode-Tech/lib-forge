@@ -11,7 +11,7 @@ import 'crate_hash.dart';
 import 'options.dart';
 
 // Build hook that prefers signed precompiled binaries, with local fallback.
-final _log = Logger('libforge.precompiled_builder');
+final _log = Logger('xforge.precompiled_builder');
 
 // Callback used when no precompiled artifact is available.
 typedef FallbackBuilder =
@@ -57,7 +57,7 @@ final class PrecompiledBuilder implements Builder {
           : const ['..', 'native', 'rust'],
     );
 
-    final options = LibforgeOptions.load(crateDir: crateDirectory.path);
+    final options = XforgeOptions.load(crateDir: crateDirectory.path);
     final config = options.precompiledBinaries;
     if (config == null) {
       logger.info(
@@ -170,7 +170,7 @@ Future<File> _extractLibraryFromArchive({
     path.join(
       crateDir.path,
       '.dart_tool',
-      'libforge',
+      'xforge',
       'extracted',
       buildId,
       targetTriple,
@@ -181,7 +181,7 @@ Future<File> _extractLibraryFromArchive({
   }
 
   final expectedExtension = path.extension(
-    codeConfig.targetOS.libraryFileName('libforge', _linkModeFor(codeConfig)),
+    codeConfig.targetOS.libraryFileName('xforge', _linkModeFor(codeConfig)),
   );
 
   final existing = _findLibraryInDir(
@@ -334,7 +334,7 @@ void _initLogging() {
   _loggingInitialized = true;
 
   final verbose =
-      Platform.environment['LIBFORGE_DART_PRECOMPILED_VERBOSE'] == '1';
+      Platform.environment['XFORGE_DART_PRECOMPILED_VERBOSE'] == '1';
   Logger.root.level = verbose ? Level.ALL : Level.INFO;
   Logger.root.onRecord.listen((rec) {
     final out = rec.level >= Level.WARNING ? stderr : stdout;

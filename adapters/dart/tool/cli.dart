@@ -27,7 +27,7 @@ Future<void> main(List<String> args) async {
 }
 
 void _printUsage() {
-  stdout.writeln('libforge_dart commands:');
+  stdout.writeln('xforge_dart commands:');
   stdout.writeln('  keygen');
   stdout.writeln('  validate-precompiled');
   stdout.writeln('Run with --help for command options.');

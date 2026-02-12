@@ -1,0 +1,9 @@
+[package]
+name = "xforge-build"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "Apache-2.0"
+
+[dependencies]
+xforge-core = { path = "../xforge-core" }

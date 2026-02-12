@@ -34,7 +34,7 @@ Future<int> runKeygen(List<String> args) async {
 }
 
 void _printUsage() {
-  stdout.writeln('Usage: dart run libforge_dart keygen');
+  stdout.writeln('Usage: dart run xforge_dart keygen');
   stdout.writeln('Outputs:');
   stdout.writeln('  public_key=<32-byte hex>');
   stdout.writeln('  private_key=<64-byte hex (seed + public)>');
