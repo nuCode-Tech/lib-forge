@@ -1,6 +1,6 @@
 # x-forge
 
-`x-forge` is a Rust workspace and CLI that automates deterministic native builds, packaging, signing, and publishing so a single GitHub release can serve every language consumer.
+`x-forge` is a Rust crate that automates deterministic native builds, packaging, signing, and publishing so a single GitHub release can serve every language consumer. Build targets, channels, and components come from `rust-toolchain.toml`, while `xforge.yaml` only configures `precompiled_binaries`.
 
 ## Documentation
 
@@ -11,3 +11,4 @@
 ## Next steps
 
 Start with `docs/overview.md` before running the CLI or inspecting adapters so you know how the workspace pieces fit together.
+  
