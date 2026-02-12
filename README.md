@@ -27,7 +27,6 @@ x-forge/
 ├── adapters/        # language consumers (Dart adapter shipped, others placeholders)
 ├── schemas/         # public JSON schemas for config and manifest
 ├── docs/            # guidance on target config and release flow
-├── examples/         # future UniFFI client/workspace samples
 ```
 
 ## Configuration & schemas
@@ -38,10 +37,6 @@ x-forge/
 
 - `adapters/dart` (`xforge_dart`) — runtime builder + CLI for Flutter/Dart consumers. It exposes `PrecompiledBuilder` for `code_assets`, downloads signed artifacts by reading `xforge.yaml`, computes the same `build_id` as the CLI, verifies every manifest/artifact signature, and falls back to a local build depending on `precompiled_binaries.mode`. The companion CLI (`dart run xforge_dart validate-precompiled [--crate-dir …] [--build-id …] [--target …]`) confirms a release can be downloaded and verified.
 - `adapters/gradle`, `adapters/swift`, `adapters/python` — directories are reserved for future Kotlin/Gradle, Swift (SPM/CocoaPods), and Python adapters; they currently contain stubs.
-
-## Examples
-
-`examples/` is reserved for UniFFI + client snippets (for now the repository only tracks the `uniffi-xforge` scaffold with generated `.dart_tool` metadata). Once filled, it will demonstrate wiring a Rust crate + Dart client through xforge.
 
 ## Additional docs
 
