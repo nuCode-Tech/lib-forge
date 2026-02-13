@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -20,6 +21,15 @@ class PrecompiledBinariesConfig {
   final String? urlPrefix;
   final PublicKey publicKey;
   final PrecompiledBinaryMode mode;
+
+  PrecompiledBinariesConfig copyWith({PrecompiledBinaryMode? mode}) {
+    return PrecompiledBinariesConfig(
+      repository: repository,
+      publicKey: publicKey,
+      urlPrefix: urlPrefix,
+      mode: mode ?? this.mode,
+    );
+  }
 
   Uri fileUrl({required String buildId, required String fileName}) {
     final prefix = urlPrefix;
@@ -111,6 +121,79 @@ class XforgeOptions {
   }
 }
 
+class AppPrecompiledOverrides {
+  const AppPrecompiledOverrides({this.mode, this.logLevel});
+
+  final PrecompiledBinaryMode? mode;
+  final Level? logLevel;
+
+  static AppPrecompiledOverrides? parse(Object? raw) {
+    if (raw == null) {
+      return null;
+    }
+    if (raw is! Map) {
+      throw FormatException('app-level config must be a map');
+    }
+
+    final precompiledNode = raw['precompiled_binaries'];
+    if (precompiledNode == null) {
+      return null;
+    }
+
+    if (precompiledNode is bool) {
+      if (!precompiledNode) {
+        return AppPrecompiledOverrides(mode: PrecompiledBinaryMode.never);
+      }
+      return null;
+    }
+
+    if (precompiledNode is! Map) {
+      throw FormatException('precompiled_binaries must be a map or boolean');
+    }
+
+    PrecompiledBinaryMode? mode;
+    final modeNode = precompiledNode['mode'];
+    if (modeNode != null) {
+      if (modeNode is! String) {
+        throw FormatException('precompiled_binaries.mode must be a string');
+      }
+      final parsed = _parsePrecompiledBinaryMode(modeNode);
+      if (parsed == null) {
+        throw FormatException(
+          'precompiled_binaries.mode must be one of: auto, always, never (aliases: download->always, build->never)',
+        );
+      }
+      mode = parsed;
+    }
+
+    Level? logLevel;
+    final loggingNode = precompiledNode['logging'];
+    if (loggingNode != null) {
+      if (loggingNode is! Map) {
+        throw FormatException('precompiled_binaries.logging must be a map');
+      }
+      final levelNode = loggingNode['level'];
+      if (levelNode != null) {
+        if (levelNode is! String) {
+          throw FormatException('precompiled_binaries.logging.level must be a string');
+        }
+        final parsed = _parseLogLevel(levelNode);
+        if (parsed == null) {
+          throw FormatException(
+            'precompiled_binaries.logging.level must be one of: ALL, FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE, SHOUT, OFF',
+          );
+        }
+        logLevel = parsed;
+      }
+    }
+
+    if (mode == null && logLevel == null) {
+      return null;
+    }
+    return AppPrecompiledOverrides(mode: mode, logLevel: logLevel);
+  }
+}
+
 class UserOptions {
   UserOptions({required this.usePrecompiledBinaries});
 
@@ -155,6 +238,16 @@ PrecompiledBinaryMode? _parsePrecompiledBinaryMode(String raw) {
     'never' || 'build' || 'off' || 'disabled' => PrecompiledBinaryMode.never,
     _ => null,
   };
+}
+
+Level? _parseLogLevel(String raw) {
+  final name = raw.trim().toUpperCase();
+  for (final level in Level.LEVELS) {
+    if (level.name == name) {
+      return level;
+    }
+  }
+  return null;
 }
 
 String? _normalizeOwnerRepo(String raw) {

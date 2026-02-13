@@ -87,6 +87,23 @@ components = ["rustfmt", "clippy"]
 - `mode` accepts `auto`, `always`/`download`, and `never`/`build`/`off`. When `mode=always`, the builder throws instead of falling back; when `mode=never`, it always runs your `fallback`.
 - `url_prefix` lets you point to an alternative host than GitHub.
 
+## App-level overrides
+
+Apps consuming a plugin can override precompiled behavior in their
+`pubspec.yaml` under the plugin package name. App-level values override the
+plugin's `xforge.yaml` for `precompiled_binaries.mode` and logging only.
+
+```yaml
+<package_name>:
+  precompiled_binaries:
+    mode: auto
+    logging:
+      level: INFO
+```
+
+Valid logging levels: `ALL`, `FINEST`, `FINER`, `FINE`, `CONFIG`, `INFO`,
+`WARNING`, `SEVERE`, `SHOUT`, `OFF`.
+
 ## Caching and logging
 
 Downloaded manifests, artifacts, and extracted libraries live under `.dart_tool/xforge`. Signatures are verified with `ed25519_edwards`, and HTTP downloads are retried with exponential backoff (`httpGetWithRetry`). Verbose logging can be enabled with `XFORGE_DART_PRECOMPILED_VERBOSE=1`.

@@ -43,10 +43,14 @@ final class PrecompiledBuilder implements Builder {
     List<AssetRouting> assetRouting = const [ToAppBundle()],
     Logger? logger,
   }) async {
-    _initLogging();
     if (!input.config.buildCodeAssets) {
       return;
     }
+
+    final appOverrides = AppPrecompiledOverrides.parse(
+      input.userDefines[input.packageName],
+    );
+    _initLogging(appOverrides?.logLevel);
 
     logger ??= _log;
 
@@ -58,13 +62,17 @@ final class PrecompiledBuilder implements Builder {
     );
 
     final options = XforgeOptions.load(crateDir: crateDirectory.path);
-    final config = options.precompiledBinaries;
+    var config = options.precompiledBinaries;
     if (config == null) {
       logger.info(
         'No precompiled_binaries config; falling back to local build.',
       );
       await fallback(input, output, assetRouting, logger);
       return;
+    }
+
+    if (appOverrides?.mode != null) {
+      config = config.copyWith(mode: appOverrides?.mode);
     }
 
     if (config.mode == PrecompiledBinaryMode.never) {
@@ -329,13 +337,13 @@ LinkMode _linkModeFor(CodeConfig codeConfig) {
 
 bool _loggingInitialized = false;
 
-void _initLogging() {
+void _initLogging(Level? overrideLevel) {
   if (_loggingInitialized) return;
   _loggingInitialized = true;
 
   final verbose =
       Platform.environment['XFORGE_DART_PRECOMPILED_VERBOSE'] == '1';
-  Logger.root.level = verbose ? Level.ALL : Level.INFO;
+  Logger.root.level = overrideLevel ?? (verbose ? Level.ALL : Level.INFO);
   Logger.root.onRecord.listen((rec) {
     final out = rec.level >= Level.WARNING ? stderr : stdout;
     out.writeln('${rec.level.name}: ${rec.message}');
